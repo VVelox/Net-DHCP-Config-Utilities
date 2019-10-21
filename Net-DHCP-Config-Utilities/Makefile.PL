@@ -17,8 +17,10 @@ my %WriteMakefileArgs = (
         'Test::More' => '0',
     },
     PREREQ_PM => {
-        #'ABC'              => '1.6',
-        #'Foo::Bar::Module' => '5.0401',
+				  'Config::Tiny'=>'2.24',
+				  'Net::CIDR::Coverlap'=>'0.0.1',
+				  'Hash::Merge'=>'0.300',
+				  'Net::CIDR'=>'0.20',
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'Net-DHCP-Config-Utilities-*' },

@@ -1,9 +1,13 @@
 Changes
 lib/Net/DHCP/Config/Utilities.pm
+lib/Net/DHCP/Config/Utilities/Options.pm
+lib/Net/DHCP/Config/Utilities/Subnet.pm
 Makefile.PL
 MANIFEST			This list of files
 README
 t/00-load.t
+t/01-load.t
 t/manifest.t
 t/pod-coverage.t
 t/pod.t
+t/options.t

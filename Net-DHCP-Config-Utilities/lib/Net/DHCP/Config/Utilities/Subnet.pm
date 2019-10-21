@@ -1,13 +1,13 @@
-package Net::DHCP::Config::Utilities;
+package Net::DHCP::Config::Utilities::Subnet;
 
 use 5.006;
 use strict;
 use warnings;
-use Net::CIDR::Overlap;
+use Net::CIDR;
 
 =head1 NAME
 
-Net::DHCP::Config::Utilities - 
+Net::DHCP::Config::Utilities::Subnet - 
 
 =head1 VERSION
 
@@ -20,11 +20,7 @@ our $VERSION = '0.0.1';
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
-
-Perhaps a little code snippet.
-
-    use Net::DHCP::Config::Utilities;
+    use Net::DHCP::Config::Utilities::Subnet;
 
     my $foo = Net::DHCP::Config::Utilities->new();
     ...
@@ -33,17 +29,32 @@ Perhaps a little code snippet.
 
 =head2 new
 
+
+
 =cut
 
 sub new {
+	my %args;
+	if ( defined( $_[1] ) ){
+		%args=%{$_[1]};
+	}
+
+	if ( !defined( $args{base} ) ){
+		die('No base defined');
+	}elsif( !defined( $args{mask} ) ){
+		die('No mask defined');
+	}
+
 	my $self={
-			  nco=>Net::CIDR::Overlap->new,
+			  ranges=>[],
+			  desc=>undef,
+			  base=>undef,
+			  options=>{},
 			  };
 	bless $self;
 
 	return $self;
 }
-
 
 
 =head1 AUTHOR
