@@ -364,6 +364,9 @@ If any issues are found a string is returned that describes it.
 
 If there are no issues undef is returned.
 
+This should not be mistaken for sanity checking. This just
+makes sure that the data is the correct type for the option.
+
     my $error=$dhcp_options->validate_option( $option, $value );
     if ( defined( $error ) ){
         die( $error );
@@ -451,6 +454,14 @@ This only supports the more commonly used one for now and avoids the out of date
     | 67   | bootfile         | 0     | TXT  | bootfile-name       |
     | 213  | v4-access-domain | 0     | TXT  | v4-access-domain    |
     | 252  | web-proxy        | 0     | TXT  | web-proxy           |
+
+For options that can take multiple values, /\ *\,\ */ is used for the split.
+
+Validation is done as below.
+
+    INT = /^[0-9]+$/
+    IP  = If Net::CIDR::addr2cidr can make sense of it.
+    TXT = defined
 
 =head1 AUTHOR
 
