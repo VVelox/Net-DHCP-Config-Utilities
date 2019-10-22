@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Test::More;
 
-plan tests => 2;
+plan tests => 6;
 
 BEGIN {
     use_ok( 'Net::DHCP::Config::Utilities::Subnet' ) || print "Bail out!\n";
@@ -30,3 +30,42 @@ if( $ENV{'perl_dev_test'} ){
 	diag( "object dump...\n".Dumper( $subnet ) );
 }
 
+$worked=0;
+eval{
+	my $base=$subnet->base_get;
+	if ( $base ne $options->{base} ){
+		die( '"'.$base.'" was returned for the base, but "'.$options->{base}.'" was expcted');
+	}
+	$worked=1;
+};
+ok( $worked eq '1', 'base_get') or diag('base_get failed with... '.$@);
+
+$worked=0;
+eval{
+	my $desc=$subnet->desc_get;
+	if ( $desc ne $options->{desc} ){
+		die( '"'.$desc.'" was returned for the base, but "'.$options->{desc}.'" was expcted');
+	}
+	$worked=1;
+};
+ok( $worked eq '1', 'desc_get') or diag('desc_get failed with... '.$@);
+
+$worked=0;
+eval{
+	my $mask=$subnet->mask_get;
+	if ( $mask ne $options->{mask} ){
+		die( '"'.$mask.'" was returned for the mask, but "'.$options->{mask}.'" was expcted');
+	}
+	$worked=1;
+};
+ok( $worked eq '1', 'mask_get') or diag('mask_get failed with... '.$@);
+
+$worked=0;
+eval{
+	my $option=$subnet->option_get('dns');
+	if ( $option ne $options->{dns} ){
+		die( '"'.$option.'" was returned for the option dns, but "'.$options->{dns}.'" was expcted');
+	}
+	$worked=1;
+};
+ok( $worked eq '1', 'option_get') or diag('option_get failed with... '.$@);

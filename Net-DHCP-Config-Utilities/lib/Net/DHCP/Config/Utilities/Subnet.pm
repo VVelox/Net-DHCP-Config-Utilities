@@ -57,7 +57,7 @@ sub new {
 		%args=%{$_[1]};
 	}
 
-# make sure we have the bare minimum to succeed
+	# make sure we have the bare minimum to succeed
 	if ( !defined( $args{base} ) ){
 		die('No base defined');
 	}elsif( !defined( $args{mask} ) ){
@@ -152,10 +152,135 @@ sub new {
 		}
 
 		# if we get here, it validated and is safe to add
-		$self->{options}{$opt}=$args{$opt};
+		# use $key so we are always saving it here as the short option
+		$self->{options}{$key}=$args{$opt};
 	}
 
 	return $self;
+}
+
+=head2 base_get
+
+This returns the base IP for the subnet.
+
+    my $base_IP=$subnet->base;
+
+=cut
+
+sub base_get{
+	return $_[0]->{base};
+}
+
+=head2 desc_get
+
+Returns the description.
+
+If this was not defined when initialized, '' will be returned.
+
+    my $desc=$subnet->desc_get;
+
+=cut
+
+sub desc_get{
+	return $_[0]->{desc};
+}
+
+=head2 mask_get
+
+This returns the current subnet mask.
+
+    my $mask=$subnet->mask;
+
+=cut
+
+sub mask_get{
+	return $_[0]->{mask};
+}
+
+=head2 option_get
+
+This returns the requested option.
+
+If the requested option is not set, undef is returned.
+
+Options are always saved internally using the short name, so if an
+option has both a long name and shortname, then the short name is used.
+
+    my $option_value=$subnet->option_get( $option );
+    if ( !defined( $option_value ) ){
+        print $option." is not set\n";
+    }
+
+=cut
+
+sub option_get{
+	my $self=$_[0];
+	my $option=$_[1];
+
+	# this is one that may potentially be requested, but is stored else where
+	if ( $option eq 'mask' ){
+		return $self->{mask};
+	}
+
+	if ( defined( $self->{options}{$option} ) ){
+		return $self->{options}{$option}
+	}
+
+	return undef;
+}
+
+=head2 options_list
+
+This list options that have been set, excluding mask.
+
+    my @options=$subnet->options_list;
+
+=cut
+
+sub options_list{
+	return keys( %{ $_[0]->{options} } );
+}
+
+=head2 option_set
+
+This sets an option.
+
+    eval{
+         $subnet->option_set( $option, $value );
+    };
+    if ( $@ ){
+        warn( 'Failed to set option "'.$option.'" with value "'.$value.'"... error='.$@ );
+    }
+
+=cut
+
+sub option_set{
+	my $self=$_[0];
+	my $option=$_[1];
+	my $value=$_[2];
+
+	if ( !defined( $option ) ){
+		die( 'No option defined' );
+	}
+
+	# if no value is defined, delete the requested option
+	if ( ! defined( $value ) ){
+		if ( defined( $self->{options}{$option} ) ){
+			delete( $self->{options}{$option} );
+		}
+		return 1;
+	}
+
+	# make sure the specified value is valid
+	my $options_helper=Net::DHCP::Config::Utilities::Options->new;
+	my $error=$options_helper->validate_option( $option, $value );
+	if ( defined( $error ) ){
+		die('"'.$option.'" option with value "'.$value.'" did not validate... '.$error);
+	}
+
+	$self->{options}{$option}=$value;
+
+	return 1;
 }
 
 =head1 AUTHOR
