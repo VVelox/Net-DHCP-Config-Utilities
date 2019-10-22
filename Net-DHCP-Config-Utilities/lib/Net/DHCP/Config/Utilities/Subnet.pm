@@ -4,10 +4,12 @@ use 5.006;
 use strict;
 use warnings;
 use Net::CIDR;
+use Net::DHCP::Config::Utilities::Options;
+use Net::CIDR::Set;
 
 =head1 NAME
 
-Net::DHCP::Config::Utilities::Subnet - 
+Net::DHCP::Config::Utilities::Subnet - Represents a subnet.
 
 =head1 VERSION
 
@@ -22,14 +24,30 @@ our $VERSION = '0.0.1';
 
     use Net::DHCP::Config::Utilities::Subnet;
 
-    my $foo = Net::DHCP::Config::Utilities->new();
-    ...
+    my $options={
+                 base=>'10.0.0.0',
+                 mask=>'255.255.255.0',
+                 dns=>'10.0.0.1 , 10.0.10.1',
+                 desc=>'a example subnet',
+                 };
+    
+    my $subnet = Net::DHCP::Config::Utilities::Subnet->new( $options );
+
 
 =head1 METHODS
 
 =head2 new
 
+This initiates the object.
 
+    my $options={
+                 base=>'10.0.0.0',
+                 mask=>'255.255.255.0',
+                 dns=>'10.0.0.1 , 10.0.10.1',
+                 desc=>'a example subnet',
+                 };
+    
+    my $subnet = Net::DHCP::Config::Utilities::Subnet->new( $options );
 
 =cut
 
@@ -39,23 +57,106 @@ sub new {
 		%args=%{$_[1]};
 	}
 
+# make sure we have the bare minimum to succeed
 	if ( !defined( $args{base} ) ){
 		die('No base defined');
 	}elsif( !defined( $args{mask} ) ){
 		die('No mask defined');
 	}
 
+	# make sure the base and mask are sane
+	my $cidr;
+	eval{
+		$cidr=Net::CIDR::addrandmask2cidr( $args{base}, $args{mask} );
+	};
+	if ( $@ ){
+		die( 'Base/mask validation failed with... '.$@ );
+	}
+
+	if (!defined( $args{desc} )){
+		$args{desc}='';
+	}
+
 	my $self={
 			  ranges=>[],
-			  desc=>undef,
-			  base=>undef,
+			  desc=>$args{desc},
+			  base=>$args{base},
+			  mask=>$args{mask},
+			  cidr=>$cidr,
 			  options=>{},
 			  };
 	bless $self;
 
+	# process any specified ranges
+	if (defined( $args{ranges} )){
+		my $cidr_checker=Net::CIDR::Set->new( $cidr );
+
+		foreach my $range ( @{ $args{ranges} } ){
+			my @range_split=split(/\ +/, $range);
+
+			# make sure we have both start and end
+			if (
+				(!defined( $range_split[0] )) ||
+				(!defined( $range_split[1] ))
+				){
+				die('"'.$range.'" not a properly formed range... Should be "IP IP"');
+			}
+
+			# make sure both the top and bottom of the range are in our subnet
+			my @cidr_list = Net::CIDR::addr2cidr( $range_split[0] );
+			if (! $cidr_checker->contains_all( $cidr_list[0] ) ){
+				die('"'.$range_split[0].'" for "'.$range.'" not in the CIDR "'.$cidr.'"');
+			}
+			@cidr_list = Net::CIDR::addr2cidr( $range_split[1] );
+			if (! $cidr_checker->contains_all( $cidr_list[0] ) ){
+				die('"'.$range_split[1].'" for "'.$range.'" not in the CIDR "'.$cidr.'"');
+			}
+
+			# if we get here, it validated and is safe to add
+			push( @{ $self->{ranges} }, $range );
+		}
+	}
+
+	my $options_helper=Net::DHCP::Config::Utilities::Options->new;
+	my $options=$options_helper->get_options;
+	delete( $options->{mask} ); # already handled this previously
+	foreach my $key ( %{ $options } ){
+		my $opt=$key;
+
+		# make sure we don't have long and short, if long is different than short
+		if (
+			defined( $args{ $key } ) &&
+			(
+			 defined( $args{ $options->{$key}{long} } ) &&
+			 ( $args{ $key } ne  $args{ $options->{$key}{long} } )
+			 )
+			){
+			die( '"'.$key.'" and "'.$args{ $options->{$key}{long} }.'" both defined and the desired one to use is ambigous' );
+		}
+
+		# figure out if we are using long or short and set $opt appropriately
+		if (
+			defined( $args{ $options->{$key}{long} } ) &&
+			( ! defined( $args{ $key } ) )
+			){
+			$opt=$options->{$key}{long}
+		}
+
+		# finally get around to processing it if we have it
+		if ( defined( $args{ $opt } ) ){
+			# make sure the value for the option is sane
+			my $error=$options_helper->validate_option( $opt, $args{ $opt } );
+			if ( defined( $error ) ){
+				die('"'.$opt.'" option with value "'.$args{$opt}.'" did not validate... '.$error);
+			}
+		}
+
+		# if we get here, it validated and is safe to add
+		$self->{options}{$opt}=$args{$opt};
+	}
+
 	return $self;
 }
-
 
 =head1 AUTHOR
 
