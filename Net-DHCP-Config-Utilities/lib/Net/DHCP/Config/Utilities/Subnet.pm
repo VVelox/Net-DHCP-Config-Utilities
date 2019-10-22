@@ -263,6 +263,10 @@ sub option_set{
 		die( 'No option defined' );
 	}
 
+	if ( $option eq 'mask' ){
+		die( 'Setting subnet mask here is not supported') ;
+	}
+
 	# if no value is defined, delete the requested option
 	if ( ! defined( $value ) ){
 		if ( defined( $self->{options}{$option} ) ){
