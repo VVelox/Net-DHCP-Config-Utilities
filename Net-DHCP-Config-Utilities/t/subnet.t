@@ -10,12 +10,12 @@ BEGIN {
     use_ok( 'Net::DHCP::Config::Utilities::Subnet' ) || print "Bail out!\n";
 }
 
-    my $options={
-                 base=>'10.0.0.0',
-                 mask=>'255.255.255.0',
-                 dns=>'10.0.0.1 , 10.0.10.1',
-                 desc=>'a example subnet',
-                 };
+my $options={
+			 base=>'10.0.0.0',
+			 mask=>'255.255.255.0',
+			 dns=>'10.0.0.1 , 10.0.10.1',
+			 desc=>'a example subnet',
+			 };
 
 my $worked=0;
 my $subnet;

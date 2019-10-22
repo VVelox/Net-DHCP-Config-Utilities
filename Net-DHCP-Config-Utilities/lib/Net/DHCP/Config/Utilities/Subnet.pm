@@ -120,7 +120,7 @@ sub new {
 	my $options_helper=Net::DHCP::Config::Utilities::Options->new;
 	my $options=$options_helper->get_options;
 	delete( $options->{mask} ); # already handled this previously
-	foreach my $key ( %{ $options } ){
+	foreach my $key ( keys( %{ $options } ) ){
 		my $opt=$key;
 
 		# make sure we don't have long and short, if long is different than short
