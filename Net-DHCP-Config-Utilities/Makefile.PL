@@ -21,6 +21,7 @@ my %WriteMakefileArgs = (
 				  'Net::CIDR::Coverlap'=>'0.0.1',
 				  'Hash::Merge'=>'0.300',
 				  'Net::CIDR'=>'0.20',
+				  'Net::CIDR::Set'=>'0.13',
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'Net-DHCP-Config-Utilities-*' },

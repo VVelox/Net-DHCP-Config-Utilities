@@ -26,25 +26,151 @@ Perhaps a little code snippet.
 
     use Net::DHCP::Config::Utilities;
 
-    my $foo = Net::DHCP::Config::Utilities->new();
-    ...
+    my $dhcp_util = Net::DHCP::Config::Utilities->new;
+
 
 =head1 METHODS
 
 =head2 new
+
+    my $dhcp_util = Net::DHCP::Config::Utilities->new;
 
 =cut
 
 sub new {
 	my $self={
 			  nco=>Net::CIDR::Overlap->new,
+			  subnets=>{},
 			  };
 	bless $self;
 
 	return $self;
 }
 
+=head2 generate
 
+This runs the the specified configuration engine.
+
+=cut
+
+sub generate{
+	my $self=$_[0];
+	my $module=$_[1];
+	my $args=$_[2];
+
+	my $gen;
+	my $returned;
+	my $to_eval="use ".$module.";".
+	' $gen='.$module.'->new( $args );'.
+	' $returned=$gen->run;';
+	eval( $to_eval );
+	if ( $@ ){
+		die( '"'.$module.'" died with... '.$@ );
+	}
+
+	return $returned;
+}
+
+=head2 subnet_add
+
+This adds a new L<Net::DHCP::Config::Utilities::Subnet> object, provided
+it does not over lap any existing ones. If the same base/mask has been
+added previously, the new will over write the old.
+
+One object is taken and that is the L<Net::DHCP::Config::Utilities::Subnet>
+to add.
+
+This will die upon failure.
+
+    eval{
+       $dhcp_util->subnet_add( $subnet );
+    };
+    if ( $@ ){
+        die( $@.' prevented the subnet from being added' );
+    }
+
+=cut
+
+sub subnet_add{
+	my $self=$_[0];
+	my $subnet=$_[1];
+
+	if ( ref( $subnet ) ne 'Net::DHCP::Config::Utilities::Subnet' ){
+		die( 'No subnet specified or not a Net::DHCP::Config::Utilities::Subnet' );
+	}
+
+	# check if it already exists
+	my $base=$subnet->base_get;
+	my $mask=$subnet->mask_get;
+	if ( defined( $self->{subnet}{$base} ) ){
+		my $current_mask=$self->{subnet}{$base}->mask_get;
+		# if it already exists with a different mask, don't readd it
+		if ( $mask ne $current_mask ){
+			die ( '"'.$base.'" already exists with the mask "'.$current_mask.'" can not readd it with the mask "'.$mask.'"' );
+		}
+		$self->{subnet}{$base}=$subnet;
+		return 1;
+	}
+
+	my $cidr=$subnet->cidr;
+
+	# make sure this subnet does not overlap with any existing ones
+	eval{
+		$self->{nco}->compare_and_add( $cidr );
+	};
+	if ( $@ ){
+		die( '"'.$cidr.'" overlaps one or more exists subnets' );
+	}
+
+	$self->{subnet}{$base}=$subnet;
+
+	return 1;
+}
+
+=head2 subnet_get
+
+This returns the requested the subnet.
+
+One option is taken and that is the base of the subnet desired.
+
+If the requested subnet is not found, this will die.
+
+The returned value is a L<Net::DHCP::Config::Utilities::Subnet>
+object.
+
+    my $subnet=$dhcp_util->subnet_get;
+    if ( $@ ){
+        die( $@ );
+    }
+
+=cut
+
+sub subnet_get{
+	my $self=$_[0];
+	my $base=$_[1];
+
+	if (! defined( $base ) ){
+		die( 'No base specified' );
+	}
+
+	if ( !defined( $self->{subnets}{ $base } ) ){
+		die( '"'.$base.'" does not exist' );
+	}
+
+	return $self->{subnets}{ $base };
+}
+
+=head2 subnet_list
+
+Returns a list of the subnet bases.
+
+    my @subnets=$dhcp_util->subnet_list;
+
+=cut
+
+sub subnet_list{
+	return keys( %{ $_[0]->{subnets} } );
+}
 
 =head1 AUTHOR
 

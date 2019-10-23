@@ -171,6 +171,18 @@ sub base_get{
 	return $_[0]->{base};
 }
 
+=head2 cidr
+
+Returns the CIDR for the subnet.
+
+    my $cidr=$subnet->cidr;
+
+=cut
+
+sub cidr{
+	return $_[0]->{cidr};
+}
+
 =head2 desc_get
 
 Returns the description.
