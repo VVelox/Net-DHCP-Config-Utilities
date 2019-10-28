@@ -22,6 +22,7 @@ my %WriteMakefileArgs = (
 				  'Hash::Merge'=>'0.300',
 				  'Net::CIDR'=>'0.20',
 				  'Net::CIDR::Set'=>'0.13',
+				  'File::Find::Rule'=>'0.34',
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'Net-DHCP-Config-Utilities-*' },
