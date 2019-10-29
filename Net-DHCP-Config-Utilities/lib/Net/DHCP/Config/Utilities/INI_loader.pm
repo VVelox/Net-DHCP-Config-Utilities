@@ -9,7 +9,7 @@ use Net::DHCP::Config::Utilities::Subnet;
 
 =head1 NAME
 
-Net::DHCP::Config::Utilities::INI_loader - 
+Net::DHCP::Config::Utilities::INI_loader - Loads subnet configurations from a INI file.
 
 =head1 VERSION
 
@@ -68,6 +68,14 @@ This loads a specific file in question.
 
 One argument is taken and that is the path to the INI file.
 
+    eval{
+        $load->load_file( $file );
+    };
+    if ( $@ ){
+        # do something upon error
+        die( $@ );
+    }
+
 =cut
 
 sub load_file{
@@ -97,10 +105,10 @@ sub load_file{
 				if ( $option_key =~ /^range/ ){
 					# each range variable needs to be treated specially
 					# as they all need loaded into a array
-					if ( !defined $options->{range} ){
-						$options->{range}=[ $ini->{$key}{$option_key} ];
+					if ( !defined $options->{ranges} ){
+						$options->{ranges}=[ $ini->{$key}{$option_key} ];
 					}else{
-						push( @{ $options->{range} }, $ini->{$key}{$option_key} );
+						push( @{ $options->{ranges} }, $ini->{$key}{$option_key} );
 					}
 				}else{
 					$options->{$option_key} = $ini->{$key}{$option_key};
@@ -194,6 +202,29 @@ sub load_dir{
 
 	return $total;
 }
+
+=head1 INI EXPECTATIONS
+
+Each sesction of a INI file is treated as its own subnet.
+
+The variable/values taken must be understood by L<Net::DHCP::Config::Utilities::Subnet>.
+
+If the variable base is not specified, the section name is used.
+
+Any variable matching /^range/ is added to the ranges array used when creating the subnet.
+
+    [10.0.0.0]
+    mask=255.255.0.0
+    dns=10.0.0.1 , 10.0.10.1
+    desc=a /16
+    routers=10.0.0.1
+    
+    [foo]
+    base=192.168.0.0
+    mask=255.255.0.0
+    dns=10.0.0.1 , 10.0.10.1
+    routers=192.168.0.1
+    range=192.168.0.100 192.168.0.200
 
 =head1 AUTHOR
 
