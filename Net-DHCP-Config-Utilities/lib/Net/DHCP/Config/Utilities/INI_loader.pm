@@ -28,7 +28,14 @@ our $VERSION = '0.0.1';
     my $dhcp_util = Net::DHCP::Config::Utilities->new;
     
     my $loader = Net::DHCP::Config::Utilities::INI_loader->new( $dhcp_util );
-
+    
+    eval{
+        $load->load_file( $file );
+    };
+    if ( $@ ){
+        # do something upon error
+        die( $@ );
+    }
 
 =head1 METHODS
 
@@ -67,6 +74,8 @@ sub new {
 This loads a specific file in question.
 
 One argument is taken and that is the path to the INI file.
+
+If this encounter any errors, it will die.
 
     eval{
         $load->load_file( $file );
@@ -146,9 +155,7 @@ The first and required is the directory to load.
 The second and optional is the name glob to use. If none
 is specified then '*.dhcp.ini' is used.
 
-Upon error, this will die. Please note, this will may
-leave the object used to init this in a mixed state as
-there unless there are 
+Upon error, this will die.
 
     my $loaded;
     eval{
