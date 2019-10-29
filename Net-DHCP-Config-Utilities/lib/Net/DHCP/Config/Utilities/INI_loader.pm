@@ -146,8 +146,6 @@ The first and required is the directory to load.
 The second and optional is the name glob to use. If none
 is specified then '*.dhcp.ini' is used.
 
-
-
 Upon error, this will die. Please note, this will may
 leave the object used to init this in a mixed state as
 there unless there are 
