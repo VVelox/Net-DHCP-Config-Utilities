@@ -4,8 +4,6 @@ use strict;
 use warnings;
 use Test::More;
 
-plan tests => 17;
-
 BEGIN {
     use_ok( 'Net::DHCP::Config::Utilities::Options' ) || print "Bail out!\n";
 }
@@ -183,3 +181,5 @@ eval{
 	$worked=1;
 };
 ok( $worked eq '1', 'validate_option, multiple semivalid') or diag('failed with... '.$@);
+
+done_testing(17);

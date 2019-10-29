@@ -116,10 +116,10 @@ sub subnet_add{
 
 	# make sure this subnet does not overlap with any existing ones
 	eval{
-		$self->{nco}->compare_and_add( $cidr );
+		$self->{nco}->compare_and_add( $cidr, 0, 0 );
 	};
 	if ( $@ ){
-		die( '"'.$cidr.'" overlaps one or more exists subnets' );
+		die( '"'.$cidr.'" overlaps one or more exists subnets... '.$@ );
 	}
 
 	$self->{subnet}{$base}=$subnet;

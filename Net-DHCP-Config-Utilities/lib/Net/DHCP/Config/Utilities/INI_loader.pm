@@ -5,6 +5,7 @@ use strict;
 use warnings;
 use Config::Tiny;
 use File::Find::Rule;
+use Net::DHCP::Config::Utilities::Subnet;
 
 =head1 NAME
 

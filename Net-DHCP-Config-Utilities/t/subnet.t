@@ -4,8 +4,6 @@ use strict;
 use warnings;
 use Test::More;
 
-plan tests => 12;
-
 BEGIN {
     use_ok( 'Net::DHCP::Config::Utilities::Subnet' ) || print "Bail out!\n";
 }
@@ -135,3 +133,5 @@ if( $ENV{'perl_dev_test'} ){
 	use Data::Dumper;
 	diag( "object dump...\n".Dumper( $subnet ) );
 }
+
+done_testing(12);
