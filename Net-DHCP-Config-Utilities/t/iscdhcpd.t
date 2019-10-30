@@ -14,9 +14,6 @@ my $dhcp_util=Net::DHCP::Config::Utilities->new;
 my $ini_loader=Net::DHCP::Config::Utilities::INI_loader->new($dhcp_util);
 $ini_loader->load_dir( 't/ini/' );
 
-use Data::Dumper;
-diag Dumper( $dhcp_util );
-
 my $worked=0;
 my $generator;
 eval{
