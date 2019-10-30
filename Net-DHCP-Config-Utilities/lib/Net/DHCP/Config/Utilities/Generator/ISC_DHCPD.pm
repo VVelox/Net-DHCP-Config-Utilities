@@ -8,7 +8,7 @@ use Net::DHCP::Config::Utilities::Options;
 
 =head1 NAME
 
-Net::DHCP::Config::Utilities::Generator::ISC_DHCPD - Generators a config from the supplied subnets.
+Net::DHCP::Config::Utilities::Generator::ISC_DHCPD - Generators a config for ISC DHCPD from the supplied subnets.
 
 =head1 VERSION
 
@@ -22,12 +22,34 @@ our $VERSION = '0.0.1';
 =head1 SYNOPSIS
 
     use Net::DHCP::Config::Utilities::Generator::ISC_DHCPD;
-
+    
     my $options={
+                 output=>'./dhcp/dhcpd.conf',
+                 header=>'./dhcp/header.tt',
+                 footer=>'./dhcp/footer.tt',
+                 args=>{},
                  };
     
     my $generator = Net::DHCP::Config::Utilities::Subnet->new( $options );
-
+    
+    eval{
+        $generator->generate( $dhcp_util );
+    };
+    if ( $@ ){
+        # do something upon error
+        die ( $@ );
+    }
+    
+    # just return it and don't write it output
+     my $config;
+     eval{
+        $config=$generator->generate( $dhcp_util );
+    };
+    if ( $@ ){
+        # do something upon error
+        die ( $@ );
+    }
+    print $config;
 
 =head1 METHODS
 
@@ -109,7 +131,36 @@ sub new {
 
 =head2 generate
 
+This gnerates the config for ISC DHCPD.
 
+There are two options taken.
+
+The first and mandatory is a L<Net::DHCP::Config::Utilities> object
+that contains the subnets that we want to generate a config for.
+
+The second is we want to write the output to the file or not. This is
+optional and if set to true no output will be writen.
+
+This will return a string with the generated config.
+
+    eval{
+        $generator->generate( $dhcp_util );
+    };
+    if ( $@ ){
+        # do something upon error
+        die ( $@ );
+    }
+
+    # just return it and don't write it output
+     my $config;
+     eval{
+        $config=$generator->generate( $dhcp_util );
+    };
+    if ( $@ ){
+        # do something upon error
+        die ( $@ );
+    }
+    print $config;
 
 =cut
 
@@ -175,13 +226,17 @@ sub generate{
 		$middle=$middle."}\n\n";
 	}
 
-	my $fh;
-	open( $fh, '>', $self->{output} ) or die( 'Can not open "'.$self->{output}.'" for writing output to,,, C errno='.$! );
-	print $fh $header.$middle.$footer;
-	close( $fh );
+	if ( ! $no_write ){
+		my $fh;
+		open( $fh, '>', $self->{output} ) or die( 'Can not open "'.$self->{output}.'" for writing output to,,, C errno='.$! );
+		print $fh $header.$middle.$footer;
+		close( $fh );
+	}
 
 	return $header.$middle.$footer;
 }
+
+=header1 
 
 =head1 AUTHOR
 

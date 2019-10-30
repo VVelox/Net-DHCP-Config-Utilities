@@ -7,7 +7,7 @@ use Net::CIDR::Overlap;
 
 =head1 NAME
 
-Net::DHCP::Config::Utilities - 
+Net::DHCP::Config::Utilities - Utility for helping generate configs for DHCP servers.
 
 =head1 VERSION
 
@@ -24,6 +24,7 @@ Please note that this only supports IPv4 currently.
 
     use Net::DHCP::Config::Utilities;
     use Net::DHCP::Config::Utilities::INI_loader;
+    use Net::DHCP::Config::Utilities::Generator::ISC_DHCPD;
     
     my $dhcp_util = Net::DHCP::Config::Utilities->new;
     
@@ -36,12 +37,23 @@ Please note that this only supports IPv4 currently.
         # do something upon error
         die( $@ );
     }
-
+    
+    my $options={
+                 output=>'./dhcp/dhcpd.conf',
+                 header=>'./dhcp/header.tt',
+                 footer=>'./dhcp/footer.tt',
+                 args=>{},
+                 };
+    
+    my $generator = Net::DHCP::Config::Utilities::Subnet->new( $options );
 
 
 =head1 METHODS
 
 =head2 new
+
+This iniates the object. No arguments are taken
+and this will always succeed.
 
     my $dhcp_util = Net::DHCP::Config::Utilities->new;
 

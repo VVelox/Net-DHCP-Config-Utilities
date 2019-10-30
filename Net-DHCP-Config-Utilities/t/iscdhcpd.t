@@ -27,9 +27,16 @@ eval{
 };
 ok( $worked eq '1', 'init') or diag('new failed with... '.$@);
 
+if ( -f 't/iscdhcpd/output' ){
+	unlink( 't/iscdhcpd/output' );
+}
+
 $worked=0;
 eval{
 	$generator->generate( $dhcp_util );
+	if ( ! -f 't/iscdhcpd/output' ){
+		die( 'Failed to write out "t/iscdhcpd/output"' );
+	}
 	$worked=1;
 };
 ok( $worked eq '1', 'generate') or diag('generator failed with... '.$@);

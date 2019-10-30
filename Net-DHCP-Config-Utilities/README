@@ -1,16 +1,35 @@
 Net-DHCP-Config-Utilities
 
-The README is used to introduce the module and provide instructions on
-how to install the module, any machine dependencies it may have (for
-example C compilers and installed libraries) and any other information
-that should be provided before the module is installed.
+Help generate configs for DHCP servers. This includes
+checking for overlapping subnets and sanity checking
+for the various options.
 
-A README file is required for CPAN modules since CPAN extracts the README
-file from a module distribution so that people browsing the archive
-can use it to get an idea of the module's uses. It is usually a good idea
-to provide version information here so that people can decide whether
-fixes for the module are worth downloading.
+Basic example showing generating a ISC DHCPD config below.
 
+    use Net::DHCP::Config::Utilities;
+    use Net::DHCP::Config::Utilities::INI_loader;
+    use Net::DHCP::Config::Utilities::Generator::ISC_DHCPD;
+
+    my $dhcp_util = Net::DHCP::Config::Utilities->new;
+
+    my $loader = Net::DHCP::Config::Utilities::INI_loader->new( $dhcp_util );
+
+    eval{
+        $loader->load_file( $file );
+    };
+    if ( $@ ){
+        # do something upon error
+        die( $@ );
+    }
+
+    my $options={
+                 output=>'./dhcp/dhcpd.conf',
+                 header=>'./dhcp/header.tt',
+                 footer=>'./dhcp/footer.tt',
+                 args=>{},
+                 };
+
+    my $generator = Net::DHCP::Config::Utilities::Subnet->new( $options );
 
 INSTALLATION
 
