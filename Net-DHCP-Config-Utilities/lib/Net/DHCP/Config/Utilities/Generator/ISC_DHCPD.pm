@@ -146,7 +146,7 @@ sub generate{
 		# unless you have static IPs in the footer you really need ranges
 		my @ranges=$subnet->range_get;
 		foreach my $range ( @ranges ){
-			$middle=$middle.'    range .'.$range.";\n";
+			$middle=$middle.'    range '.$range.";\n";
 		}
 
 		my @options=$subnet->options_list;

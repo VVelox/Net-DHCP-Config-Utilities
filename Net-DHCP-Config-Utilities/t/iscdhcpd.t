@@ -34,4 +34,6 @@ eval{
 };
 ok( $worked eq '1', 'generate') or diag('generator failed with... '.$@);
 
+diag( 'Check t/iscdhcpd/output and make sure it looks sane' );
+
 done_testing(3);
