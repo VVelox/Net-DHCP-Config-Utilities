@@ -20,13 +20,23 @@ our $VERSION = '0.0.1';
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
-
-Perhaps a little code snippet.
+Please note that this only supports IPv4 currently.
 
     use Net::DHCP::Config::Utilities;
-
+    use Net::DHCP::Config::Utilities::INI_loader;
+    
     my $dhcp_util = Net::DHCP::Config::Utilities->new;
+    
+    my $loader = Net::DHCP::Config::Utilities::INI_loader->new( $dhcp_util );
+    
+    eval{
+        $loader->load_file( $file );
+    };
+    if ( $@ ){
+        # do something upon error
+        die( $@ );
+    }
+
 
 
 =head1 METHODS
@@ -57,6 +67,25 @@ sub generate{
 	my $self=$_[0];
 	my $module=$_[1];
 	my $args=$_[2];
+
+	if ( !defined( $module ) ){
+		die('No module defined');
+	}
+
+	# make sure the characters in the module value name
+	# just contain valid module name characters
+	if ( $module !~ /^[A-Za-z0-1\:\_]+/ ){
+		die('"'.$module.'" is not a valid perl module name');
+	}
+
+	# makes sure have atleast argument
+	if ( ! defined( $args ) ){
+		die( 'No passed for the generator' );
+	}
+
+	if ( ref( $args ) ne 'HASH' ){
+		die( 'The passed args is not a hash' );
+	}
 
 	my $gen;
 	my $returned;

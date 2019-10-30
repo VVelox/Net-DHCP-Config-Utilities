@@ -18,7 +18,7 @@ my %WriteMakefileArgs = (
     },
     PREREQ_PM => {
 				  'Config::Tiny'=>'2.24',
-				  'Net::CIDR::Coverlap'=>'0.0.1',
+				  'Net::CIDR::Overlap'=>'0.0.1',
 				  'Hash::Merge'=>'0.300',
 				  'Net::CIDR'=>'0.20',
 				  'Net::CIDR::Set'=>'0.13',

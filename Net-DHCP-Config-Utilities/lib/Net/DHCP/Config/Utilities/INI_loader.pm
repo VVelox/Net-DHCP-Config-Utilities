@@ -30,7 +30,7 @@ our $VERSION = '0.0.1';
     my $loader = Net::DHCP::Config::Utilities::INI_loader->new( $dhcp_util );
     
     eval{
-        $load->load_file( $file );
+        $loader->load_file( $file );
     };
     if ( $@ ){
         # do something upon error
