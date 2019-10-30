@@ -299,6 +299,21 @@ sub option_set{
 	return 1;
 }
 
+=head2 range_get
+
+This returns a array with containing the ranges in questions.
+
+    my @ranges=$subnet->get_ranges;
+    foreach my $range ( @range ){
+       print "range ".$range.";\n"
+    }
+
+=cut
+
+sub range_get{
+	return @{ $_[0]->{ranges} };
+}
+
 =head1 AUTHOR
 
 Zane C. Bowers-Hadley, C<< <vvelox at vvelox.net> >>

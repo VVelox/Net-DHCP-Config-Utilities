@@ -104,13 +104,13 @@ sub new {
 										'code'=>'66',
 										'multiple'=>'0',
 										'type'=>'txt',
-										'long'=>'tftp-server-name',
+										'long'=>'next-server',
 										},
 						'bootfile'=>{
-										'code'=>'67',
-										'multiple'=>'0',
-										'type'=>'txt',
-										'long'=>'bootfile-name',
+									 'code'=>'67',
+									 'multiple'=>'0',
+									 'type'=>'txt',
+									 'long'=>'filename',
 									 },
 						'v4-access-domain'=>{
 									 'code'=>'213',
@@ -126,8 +126,8 @@ sub new {
 									 },
 						},
 			  long_to_short=>{
-							  'bootfile-name'=>'bootfile',
-							  'tftp-server-name'=>'tftp-server',
+							  'filename'=>'bootfile',
+							  'next-server'=>'tftp-server',
 							  'dhcp-lease-time'=>'lease-time',
 							  'interface-mtr'=>'mtu',
 							  'root-path'=>'root',
@@ -450,8 +450,8 @@ This only supports the more commonly used one for now and avoids the out of date
     | 26   | mtu              | 0     | INT  | interface-mtu       |
     | 28   | broadcast        | 0     | IP   | broadcast-address   |
     | 51   | lease-time       | 0     | INT  | dhcp-lease-time     |
-    | 66   | tfp-server       | 0     | TXT  | tftp-server-name    |
-    | 67   | bootfile         | 0     | TXT  | bootfile-name       |
+    | 66   | tfp-server       | 0     | TXT  | next-server         |
+    | 67   | bootfile         | 0     | TXT  | filename            |
     | 213  | v4-access-domain | 0     | TXT  | v4-access-domain    |
     | 252  | web-proxy        | 0     | TXT  | web-proxy           |
 
