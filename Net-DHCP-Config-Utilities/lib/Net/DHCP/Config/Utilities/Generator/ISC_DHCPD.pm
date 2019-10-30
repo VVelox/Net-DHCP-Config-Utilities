@@ -85,8 +85,8 @@ sub new {
 		die( '"'.$args{header}.'" does not exist or is not a file');
 	}elsif( ! -f $args{footer} ){
 		die( '"'.$args{footer}.'" does not exist or is not a file');
-	}elsif( ref( $args{template} ) ne 'HASH' ){
-		die( '$args{template} is not a hash' );
+	}elsif( ref( $args{vars} ) ne 'HASH' ){
+		die( '$args{vars} is not a hash' );
 	}elsif( $args{footer} eq $args{header} ){
 		die( '$args{footer} and $args{header} are both the same, "'.$args{footer}.'",' );
 	}elsif( $args{footer} eq $args{output} ){
@@ -140,18 +140,18 @@ sub generate{
 	my @subnets=sort( $object->subnet_list );
 	foreach my $base ( @subnets ){
 		my $subnet=$object->subnet_get( $base );
-		$middle=$middle.'    subnet '.$base.' netmask '.$subnet->mask_get." {";
+		$middle=$middle.'subnet '.$base.' netmask '.$subnet->mask_get." {\n";
 
 		# add any required ranges
 		# unless you have static IPs in the footer you really need ranges
 		my @ranges=$subnet->range_get;
 		foreach my $range ( @ranges ){
-			$middle=$middle.'        range .'.$range.";\n";
+			$middle=$middle.'    range .'.$range.";\n";
 		}
 
 		my @options=$subnet->options_list;
 		foreach my $option ( @options ){
-			my $value=$subnet->get_option( $option );
+			my $value=$subnet->option_get( $option );
 			my $long=$self->{options}->get_long( $option );
 			if ( defined ( $value ) ){
 				# handle the tftp boot stuff specially thanks to ISC DHCPD not appending
@@ -160,19 +160,19 @@ sub generate{
 					($option eq 'next-server') ||
 					($option eq 'tftp-server')
 					){
-					$middle=$middle.'        next-server'.$value.";\n";
+					$middle=$middle.'    next-server'.$value.";\n";
 				}elsif(
 					   ($option eq 'filename') ||
 					   ($option eq 'bootfile')
 					   ){
-					$middle=$middle.'        filename'.$value.";\n";
+					$middle=$middle.'    filename'.$value.";\n";
 				}else{
-					$middle=$middle.'        option '.$long.' '.$value.";\n";
+					$middle=$middle.'    option '.$long.' '.$value.";\n";
 				}
 			}
 		}
 
-		$middle=$middle."    }\n";
+		$middle=$middle."}\n\n";
 	}
 
 	my $fh;

@@ -131,13 +131,13 @@ sub subnet_add{
 	# check if it already exists
 	my $base=$subnet->base_get;
 	my $mask=$subnet->mask_get;
-	if ( defined( $self->{subnet}{$base} ) ){
-		my $current_mask=$self->{subnet}{$base}->mask_get;
+	if ( defined( $self->{subnets}{$base} ) ){
+		my $current_mask=$self->{subnets}{$base}->mask_get;
 		# if it already exists with a different mask, don't readd it
 		if ( $mask ne $current_mask ){
 			die ( '"'.$base.'" already exists with the mask "'.$current_mask.'" can not readd it with the mask "'.$mask.'"' );
 		}
-		$self->{subnet}{$base}=$subnet;
+		$self->{subnets}{$base}=$subnet;
 		return 1;
 	}
 
@@ -151,7 +151,7 @@ sub subnet_add{
 		die( '"'.$cidr.'" overlaps one or more exists subnets... '.$@ );
 	}
 
-	$self->{subnet}{$base}=$subnet;
+	$self->{subnets}{$base}=$subnet;
 
 	return 1;
 }
