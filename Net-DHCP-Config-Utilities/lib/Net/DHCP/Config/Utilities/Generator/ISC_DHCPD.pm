@@ -235,7 +235,8 @@ sub generate{
 
 		my $dhcpd_bin=`/bin/sh -c 'which dhcpd 2> /dev/null'`;
 		if ( $? == 0 ){
-			my $check=`/bin/sh -c 'dhcpd -t -cf $self->{output} 2> /dev/null'`;
+			my $quoted=shell_quote( $self->{output} );
+			my $check=`/bin/sh -c 'dhcpd -t -cf $quoted 2> /dev/null'`;
 			if ( $? != 0 ){
 				die('Failed to lint the output file,"'.$self->{output}.'",');
 			}
