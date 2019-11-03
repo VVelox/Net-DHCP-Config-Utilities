@@ -5,6 +5,7 @@ use strict;
 use warnings;
 use Template;
 use Net::DHCP::Config::Utilities::Options;
+use String::ShellQuote;
 
 =head1 NAME
 
@@ -231,6 +232,14 @@ sub generate{
 		open( $fh, '>', $self->{output} ) or die( 'Can not open "'.$self->{output}.'" for writing output to,,, C errno='.$! );
 		print $fh $header.$middle.$footer;
 		close( $fh );
+
+		my $dhcpd_bin=`/bin/sh -c 'which dhcpd 2> /dev/null'`;
+		if ( $? == 0 ){
+			my $check=`/bin/sh -c 'dhcpd -t -cf $self->{output} 2> /dev/null'`;
+			if ( $? != 0 ){
+				die('Failed to lint the output file,"'.$self->{output}.'",');
+			}
+		}
 	}
 
 	return $header.$middle.$footer;
