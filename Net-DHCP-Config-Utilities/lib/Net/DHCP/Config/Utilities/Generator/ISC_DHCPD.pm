@@ -144,6 +144,10 @@ optional and if set to true no output will be writen.
 
 This will return a string with the generated config.
 
+If it is being outputed to a file, then ISC DHCPD will be called
+as 'dhcpd -t -cf $output' to lint it. It will die if it exits
+with a non-zero value.
+
     eval{
         $generator->generate( $dhcp_util );
     };
@@ -233,6 +237,7 @@ sub generate{
 		print $fh $header.$middle.$footer;
 		close( $fh );
 
+		# 2> /dev/null used to prevent this from being noisy
 		my $dhcpd_bin=`/bin/sh -c 'which dhcpd 2> /dev/null'`;
 		if ( $? == 0 ){
 			my $quoted=shell_quote( $self->{output} );
