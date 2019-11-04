@@ -1,0 +1,119 @@
+#!/usr/bin/env perl
+#
+# This software is Copyright (c) 2019 by Zane C. Bowers-Hadley.
+#
+# This is free software, licensed under:
+#
+#  The Artistic License 2.0 (GPL Compatible)
+
+use strict;
+use warnings;
+use Getopt::Long;
+use Config::Tiny;
+use Net::DHCP::Config::Utilities;
+use Net::DHCP::Config::Utilities::INI_loader;
+use Net::DHCP::Config::Utilities::Generator::ISC_DHCPD;
+use Net::CIDR;
+
+sub version{
+	print "inidhcp v. 0.0.1\n";
+}
+
+sub help{
+	print '
+-a <action>   The action to perform.
+-c <config>   The config file to use.
+-g <IPs>      Comma seperated list of gateways.
+-s <scope>    The base IP of the subnet.
+-m <mask>     Subnet mask
+-t <IP>       TFTP server
+-n <IPs>      Comma seperated list of NTP servers.
+-b <file>     The name of the boot file.
+-B <IP>       Broadcast address.
+-R <IP IP>    The range to use.
+-d <IPs>      Comma seperated list of DNS servers.
+
+ACTIONS
+add
+rm
+mod
+gen
+';
+}
+
+my $action;
+my $config_file='/usr/local/etc/inidhcp.ini';
+my $routers;
+my $scope;
+my $mask;
+my $tftp;
+my $dns;
+my $bootfile;
+my $broadcast;
+my @range;
+my $ntp;
+
+
+# get the commandline options
+Getopt::Long::Configure ('no_ignore_case');
+Getopt::Long::Configure ('bundling');
+GetOptions(
+		   'R=s@'=>\@range,
+		   'a=s'=>\$action,
+		   'c=s'=>\$config_file,
+		   'g=s'=>\$routers,
+		   's=s'=>\$scope,
+		   'm=s'=>\$mask,
+		   't=s'=>\$tftp,
+		   'b=s'=>\$bootfile,
+		   'd=s'=>\$dns,
+		   'n=s'=>\$ntp,
+		   );
+
+if ( ! defined( $action ) ){
+	die('No action specified via -a');
+}
+
+if ( ! -f $config_file ){
+	die('Config "'.$config_file.'" does not exist');
+}
+
+my $config;
+eval{
+	$config=Config::Tiny->read( $config_file );
+};
+if ( $@ ){
+	die( 'Config::Tiny->read died unexpectedly... '.$@ );
+}elsif( !defined( $config ) ){
+	die( 'Failed to read the config... '.Config::Tiny->errstr );
+}
+
+# make sure we have all the basics we need to operate
+if (!defined( $config->{_}{dir} ) ){
+	die('"dir" not defined in the config');
+}elsif(!defined( $config->{_}{footer} ) ){
+	die('"footer" not defined in the config');
+}elsif(!defined( $config->{_}{header} ) ){
+	die('"header" not defined in the config');
+}elsif(!defined( $config->{_}{output} ) ){
+	die('"output" not defined in the config');
+}
+
+my $util=Net::DHCP::Config::Utilities->new;
+my $loader = Net::DHCP::Config::Utilities::INI_loader->new( $util );
+
+# do this first as we don't need to load anything
+if ( $action eq 'rm' ){
+	if ( !defined( $scope ) ){
+		die('No scope specified via -s');
+	}
+	
+}
+
+eval{
+	$loader->load_dir( $config->{dir} );
+};
+if ( $@ ){
+	die( $@ );
+}
+
