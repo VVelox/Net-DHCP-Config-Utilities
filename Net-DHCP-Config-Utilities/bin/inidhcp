@@ -11,6 +11,7 @@ use warnings;
 use Getopt::Long;
 use Config::Tiny;
 use Net::DHCP::Config::Utilities;
+use Net::DHCP::Config::Utilities::Subnet;
 use Net::DHCP::Config::Utilities::INI_loader;
 use Net::DHCP::Config::Utilities::Generator::ISC_DHCPD;
 use Net::CIDR;
@@ -32,11 +33,14 @@ sub help{
 -B <IP>       Broadcast address.
 -R <IP IP>    The range to use.
 -d <IPs>      Comma seperated list of DNS servers.
+-m <MTU>      The MTU for the subnet.
+-w <URL>      The web proxy for the subnet.
+-l <time>     The lease time.
+-l <path>     Root path for netboot via NFS.
 
 ACTIONS
 add
 rm
-mod
 gen
 ';
 }
@@ -52,7 +56,12 @@ my $bootfile;
 my $broadcast;
 my @range;
 my $ntp;
-
+my $print=0;
+my $mtu;
+my $web_proxy;
+my $lease_time;
+my $root_path;
+my $desciption;
 
 # get the commandline options
 Getopt::Long::Configure ('no_ignore_case');
@@ -66,8 +75,15 @@ GetOptions(
 		   'm=s'=>\$mask,
 		   't=s'=>\$tftp,
 		   'b=s'=>\$bootfile,
+		   'B=s'=>\$broadcast,
 		   'd=s'=>\$dns,
 		   'n=s'=>\$ntp,
+		   'p'=>\$print,
+		   'm=s'=>\$mtu,
+		   'w=s'=>\$web_proxy,
+		   'l=s'=>\$lease_time,
+		   'r=s'=>\$root_path,
+		   'D=s'=>\$desciption,
 		   );
 
 if ( ! defined( $action ) ){
@@ -76,6 +92,16 @@ if ( ! defined( $action ) ){
 
 if ( ! -f $config_file ){
 	die('Config "'.$config_file.'" does not exist');
+}
+
+# test -s if it is specified
+if ( defined( $scope ) ){
+	eval{
+		my @cidrs=Net::CIDR::addr2cidr( $scope );
+	};
+	if ( $@ ){
+		die( '"'.$scope.'" is not a valid base IP for a scope' );
+	}
 }
 
 my $config;
@@ -91,29 +117,142 @@ if ( $@ ){
 # make sure we have all the basics we need to operate
 if (!defined( $config->{_}{dir} ) ){
 	die('"dir" not defined in the config');
-}elsif(!defined( $config->{_}{footer} ) ){
-	die('"footer" not defined in the config');
-}elsif(!defined( $config->{_}{header} ) ){
-	die('"header" not defined in the config');
-}elsif(!defined( $config->{_}{output} ) ){
-	die('"output" not defined in the config');
+}elsif(!defined( $config->{generator}{footer} ) ){
+	die('"footer" not defined in the config in the config section "generator"');
+}elsif(!defined( $config->{generator}{header} ) ){
+	die('"header" not defined in the config in the config section "generator"');
+}elsif(!defined( $config->{generator}{output} ) ){
+	die('"output" not defined in the config in the config section "generator"');
+}elsif( ! -d $config->{_}{dir} ){
+	die('"'.$config->{_}{dir}.'" is not a directory or does not exist');
 }
-
-my $util=Net::DHCP::Config::Utilities->new;
-my $loader = Net::DHCP::Config::Utilities::INI_loader->new( $util );
 
 # do this first as we don't need to load anything
 if ( $action eq 'rm' ){
 	if ( !defined( $scope ) ){
 		die('No scope specified via -s');
 	}
-	
+	my $file=$config->{_}{dir}.'/'.$scope.'.dhcp.ini';
+	unlink( $file ) or die( 'Failed to unlink "'.$file.'"');
+	exit 0;
 }
+
+my $util=Net::DHCP::Config::Utilities->new;
+my $loader = Net::DHCP::Config::Utilities::INI_loader->new( $util );
+
 
 eval{
-	$loader->load_dir( $config->{dir} );
+	$loader->load_dir( $config->{_}{dir} );
 };
 if ( $@ ){
-	die( $@ );
+	die( 'Failed to load the scopes from "'.$config->{_}{dir}.'"'.$@ );
 }
 
+#handle generation
+if ( $action eq 'gen' ){
+	# make sure this always exists, even if it is blank so we don't error upon init
+	if (!defined( $config->{vars} ) ){
+		$config->{vars}={};
+	}
+
+	# init generator
+	my $generator;
+	eval{
+        $generator=Net::DHCP::Config::Utilities::Generator::ISC_DHCPD->new({
+																			'footer'=>$config->{generator}{footer},
+																			'header'=>$config->{generator}{header},
+																			'vars'=>$config->{vars},
+																			'output'=>$config->{generator}{output},
+																			});
+	};
+	if ( $@ ){
+		die( 'Failed to init the ISC DHCPD config generation module... '.$@ );
+	}
+
+	# generate it
+	my $isc_dhcpd_config;
+	eval{
+		# if $print is true, then a string is returned and nothing is written to the FS
+		my $isc_dhcpd_config=$generator->generate( $util, $print );
+	};
+	if ( $@ ){
+		die ( 'ISC DHCPD config generation failed... '.$@ );
+	}
+
+	# print the config if requested
+	if ( $print ){
+		print $isc_dhcpd_config;
+	}
+
+	exit 0;
+}
+
+# handle adding
+if ( $action eq 'add' ){
+	if ( !defined( $mask ) ){
+		die( 'No subnet mask specified via -m' );
+	}
+
+	# the bare options needed to create a subnet
+	my $options={
+				 mask=>$mask,
+				 base=>$scope,
+				 };
+
+	# suck in the various options if specified
+	if (defined( $dns )){
+		$options->{dns}=$dns;
+	}
+	if (defined( $routers )){
+		$options->{routers}=$routers;
+	}
+	if (defined( $ntp )){
+		$options->{ntp}=$ntp;
+	}
+	if (defined( $bootfile )){
+		$options->{bootfile}=$bootfile;
+	}
+	if(defined( $tftp )){
+		$options->{'tftp-server'}=$tftp;
+	}
+	if (defined( $range[0] )){
+		$options->{ranges}=\@range;
+	}
+	if (defined( $mtu )){
+		$options->{mtu}=$mtu;
+	}
+	if (defined( $web_proxy )){
+		$options->{'web-proxy'}=$web_proxy;
+	}
+	if (defined( $lease_time )){
+		$options->{'lease-time'}=$lease_time;
+	}
+	if (defined( $broadcast )){
+		$options->{broadcast}=$broadcast;
+	}
+	if (defined( $root_path )){
+		$options->{'root'}=$root_path;
+	}
+	if (defined( $desciption )){
+		$options->{desciption}=$desciption;
+	}
+
+	# make sure everything is sane
+	my $subnet;
+	eval{
+		$subnet = Net::DHCP::Config::Utilities::Subnet->new( $options );
+	};
+	if ( $@ ){
+		die('Failed to create the new subnet... '.$@ );
+	}
+
+	# make sure we don't overlap or anything
+	eval{
+		$util->subnet_add( $subnet );
+	};
+	if ( $@ ){
+		die( 'Failed to add subnet... '.$@ );
+	}
+
+	
+}
