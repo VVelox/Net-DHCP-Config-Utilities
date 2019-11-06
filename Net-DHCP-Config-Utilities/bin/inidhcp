@@ -36,7 +36,7 @@ sub help{
 -M <MTU>      The MTU for the subnet.
 -w <URL>      The web proxy for the subnet.
 -l <time>     The lease time.
--l <path>     Root path for netboot via NFS.
+-r <path>     Root path for netboot via NFS.
 
 ACTIONS
 add  Adds a new scope. Requires a minimum of -s and -m.
@@ -293,3 +293,82 @@ if ( $action eq 'add' ){
 
 	exit;
 }
+
+=head1 NAME
+
+inidhcp - Works with DHCP information stored in INI files.
+
+=head1 SYNOPSIS
+
+inidhcp B<-c> <config> B<-a> rm B<-s> <scope>
+
+inidhcp B<-c> <config> B<-a> gen
+
+inidhcp B<-c> <config> B<-a> add B<-s> <scope> B<-m> <mask> [B<-g> <gateways>]
+[B<-t> <TFTP server>] [B<-n> <NTP servers>] [B<-B> <broadcast>] [B<-M> <MTU>]
+[B<-d> <DNS servers>]  [B<-w> <URL>] [B<-l> <time>] [B<-b> <bootfile>]
+[B<-R> <IP IP>]
+
+=head1 FLAGS
+
+=head2 -a <action>
+
+The action to perform.
+
+=head2 -c <config>
+
+The config file to use.
+
+=head2 -g <IPs>
+
+Comma seperated list of gateways.
+
+=head2 -s <scope>
+
+The base IP of the subnet.
+
+=head2 -m <mask>
+
+Subnet mask
+
+=head2 -t <IP>
+
+TFTP server
+
+=head2 -n <IPs>
+
+Comma seperated list of NTP servers.
+
+=head2 -b <file>
+
+The name of the boot file.
+
+=head2 -B <IP>
+
+Broadcast address.
+
+=head2 -R <IP IP>
+
+The range to use.
+
+=head2 -d <IPs>
+
+Comma seperated list of DNS servers.
+
+=head2 -M <MTU>
+
+The MTU for the subnet.
+
+=head2 -w <URL>
+
+The web proxy for the subnet.
+
+=head2 -l <time>
+
+The lease time.
+
+=head2 -r <path>
+
+Root path for netboot via NFS.
+
+=cut

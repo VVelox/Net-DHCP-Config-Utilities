@@ -6,31 +6,37 @@ for the various options.
 
 Basic example showing generating a ISC DHCPD config below.
 
-    use Net::DHCP::Config::Utilities;
-    use Net::DHCP::Config::Utilities::INI_loader;
-    use Net::DHCP::Config::Utilities::Generator::ISC_DHCPD;
+    # dhcp/header
+	default-lease-time 600;
+    max-lease-time 7200;
+    ddns-update-style none;
+    authoritative;
+    option web-proxy code 252 = text;
+    log-facility local7;
 
-    my $dhcp_util = Net::DHCP::Config::Utilities->new;
+    # dhcp/footer (empty)
 
-    my $loader = Net::DHCP::Config::Utilities::INI_loader->new( $dhcp_util );
+    # dhcp/config.ini
+    dir=./dhcp/
+    [generator]
+    header=./dhcp/header
+    footer=./dhcp/footer
+    output=./dhcp/output
 
-    eval{
-        $loader->load_file( $file );
-    };
-    if ( $@ ){
-        # do something upon error
-        die( $@ );
-    }
+    # add a new subnet
+	inidhcp -c dhcp/config.ini -a add -s 192.168.20.0 -m 255.255.255.0 -d 192.168.20.1,192.168.30.1 -g 192.168.20.1 -R '192.168.20.100 192.168.20.200'
 
-    my $options={
-                 output=>'./dhcp/dhcpd.conf',
-                 header=>'./dhcp/header.tt',
-                 footer=>'./dhcp/footer.tt',
-                 args=>{},
-                 };
+    # generate the config
+	inidhcp -c dhcp/config.ini -a gen
 
-    my $generator = Net::DHCP::Config::Utilities::Subnet->new( $options );
+TODO
 
+* Implement pools
+* More documentation.
+* IPv6
+* Support for Kea
+* Add various options to inidhcp for tweaking ranges and options.
+    
 INSTALLATION
 
 To install this module, run the following commands:
@@ -60,6 +66,9 @@ You can also look for information at:
 
     Search CPAN
         https://metacpan.org/release/Net-DHCP-Config-Utilities
+
+    Git Repository
+        https://github.com/VVelox/Net-DHCP-Config-Utilities
 
 
 LICENSE AND COPYRIGHT
