@@ -28,8 +28,8 @@ Please note that this only supports IPv4 currently.
     
     my $dhcp_util = Net::DHCP::Config::Utilities->new;
     
+    # load stuff from a file
     my $loader = Net::DHCP::Config::Utilities::INI_loader->new( $dhcp_util );
-    
     eval{
         $loader->load_file( $file );
     };
@@ -38,15 +38,21 @@ Please note that this only supports IPv4 currently.
         die( $@ );
     }
     
+    # create and add a new subnet
     my $options={
-                 output=>'./dhcp/dhcpd.conf',
-                 header=>'./dhcp/header.tt',
-                 footer=>'./dhcp/footer.tt',
-                 args=>{},
+                 base=>'10.0.0.0',
+                 mask=>'255.255.255.0',
+                 dns=>'10.0.0.1 , 10.0.10.1',
+                 desc=>'a example subnet',
                  };
-    
-    my $generator = Net::DHCP::Config::Utilities::Subnet->new( $options );
-
+    my $subnet = Net::DHCP::Config::Utilities::Subnet->new( $options );
+    eval{
+        $dhcp_util->subnet_add( $subnet );
+    };
+    if ( $@ ){
+        # do something upon error
+        die( $@ );
+    }
 
 =head1 METHODS
 
@@ -67,49 +73,6 @@ sub new {
 	bless $self;
 
 	return $self;
-}
-
-=head2 generate
-
-This runs the the specified configuration engine.
-
-=cut
-
-sub generate{
-	my $self=$_[0];
-	my $module=$_[1];
-	my $args=$_[2];
-
-	if ( !defined( $module ) ){
-		die('No module defined');
-	}
-
-	# make sure the characters in the module value name
-	# just contain valid module name characters
-	if ( $module !~ /^[A-Za-z0-1\:\_]+/ ){
-		die('"'.$module.'" is not a valid perl module name');
-	}
-
-	# makes sure have atleast argument
-	if ( ! defined( $args ) ){
-		die( 'No passed for the generator' );
-	}
-
-	if ( ref( $args ) ne 'HASH' ){
-		die( 'The passed args is not a hash' );
-	}
-
-	my $gen;
-	my $returned;
-	my $to_eval="use ".$module.";".
-	' $gen='.$module.'->new( $args );'.
-	' $returned=$gen->run;';
-	eval( $to_eval );
-	if ( $@ ){
-		die( '"'.$module.'" died with... '.$@ );
-	}
-
-	return $returned;
 }
 
 =head2 subnet_add

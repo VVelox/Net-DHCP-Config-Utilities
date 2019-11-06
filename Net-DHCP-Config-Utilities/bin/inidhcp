@@ -33,15 +33,15 @@ sub help{
 -B <IP>       Broadcast address.
 -R <IP IP>    The range to use.
 -d <IPs>      Comma seperated list of DNS servers.
--m <MTU>      The MTU for the subnet.
+-M <MTU>      The MTU for the subnet.
 -w <URL>      The web proxy for the subnet.
 -l <time>     The lease time.
 -l <path>     Root path for netboot via NFS.
 
 ACTIONS
-add
-rm
-gen
+add  Adds a new scope. Requires a minimum of -s and -m.
+rm   Removes a scope. Requires -s.
+gen  Generates the output
 ';
 }
 
@@ -62,6 +62,8 @@ my $web_proxy;
 my $lease_time;
 my $root_path;
 my $desciption;
+my $help;
+my $version,
 
 # get the commandline options
 Getopt::Long::Configure ('no_ignore_case');
@@ -79,12 +81,27 @@ GetOptions(
 		   'd=s'=>\$dns,
 		   'n=s'=>\$ntp,
 		   'p'=>\$print,
-		   'm=s'=>\$mtu,
+		   'M=s'=>\$mtu,
 		   'w=s'=>\$web_proxy,
 		   'l=s'=>\$lease_time,
 		   'r=s'=>\$root_path,
 		   'D=s'=>\$desciption,
+		   'h'=>\$help,
+		   'help'=>\$help,
+		   'v'=>\$version,
+		   'version'=>\$version,
 		   );
+
+if ( $version ){
+	&version;
+	exit;
+}
+
+if ( $help ){
+	&version;
+	&help;
+	exit;
+}
 
 if ( ! defined( $action ) ){
 	die('No action specified via -a');
@@ -269,7 +286,7 @@ if ( $action eq 'add' ){
 	my $new_ini=Config::Tiny->new;
 	$new_ini->{$scope}=$options;
 
-	my $new_ini_path=$config->{_}{dir}.'/'.$base.'.dhcp.ini';
+	my $new_ini_path=$config->{_}{dir}.'/'.$scope.'.dhcp.ini';
 	if (! $new_ini->write( $new_ini_path ) ){
 		die( 'Failed to write to "'.$new_ini_path.'"' );
 	}

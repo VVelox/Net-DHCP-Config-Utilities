@@ -62,7 +62,7 @@ This initiates the object.
                  output=>'./dhcp/dhcpd.conf',
                  header=>'./dhcp/header.tt',
                  footer=>'./dhcp/footer.tt',
-                 args=>{},
+                 vars=>{},
                  };
     
     my $generator = Net::DHCP::Config::Utilities::Generator::ISC_DHCPD->new( $options );
@@ -81,7 +81,7 @@ This is the header template to use.
 
 This is the footer teomplate to use.
 
-=head4 template
+=head4 vars
 
 This is a hash containing values to pass to L<Template>
 as the \%vars value for when calling L<Template>->process.
@@ -251,7 +251,24 @@ sub generate{
 	return $header.$middle.$footer;
 }
 
-=header1 
+=head1 TEMPLATES
+
+A good base header template is as below.
+
+    default-lease-time 600;
+    max-lease-time 7200;
+    
+    ddns-update-style none;
+    
+    authoritative;
+    
+    option web-proxy code 252 = text;
+    
+    log-facility local7;
+    
+
+In general the footer will be left empty.
+It is largely for use if you have like static hosts.
 
 =head1 AUTHOR
 
