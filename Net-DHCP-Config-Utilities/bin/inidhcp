@@ -254,5 +254,25 @@ if ( $action eq 'add' ){
 		die( 'Failed to add subnet... '.$@ );
 	}
 
-	
+	# begin transforming $options for making the ini
+	delete $options->{base};
+	if( defined( $options->{ranges} ) ){
+		delete $options->{ranges};
+		my $range_int=0;
+		foreach my $current_range ( @range ){
+			$options->{'range'.$range_int}=$current_range;
+			$range_int++;
+		}
+	}
+
+	# create a new ini and shove the options into it
+	my $new_ini=Config::Tiny->new;
+	$new_ini->{$scope}=$options;
+
+	my $new_ini_path=$config->{_}{dir}.'/'.$base.'.dhcp.ini';
+	if (! $new_ini->write( $new_ini_path ) ){
+		die( 'Failed to write to "'.$new_ini_path.'"' );
+	}
+
+	exit;
 }
