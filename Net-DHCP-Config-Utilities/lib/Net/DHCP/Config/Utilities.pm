@@ -7,7 +7,7 @@ use Net::CIDR::Overlap;
 
 =head1 NAME
 
-Net::DHCP::Config::Utilities - Utility for helping generate configs for DHCP servers.
+Net::DHCP::Config::Utilities - Utility for helping generate configs for DHCP servers and manage subnets.
 
 =head1 VERSION
 
@@ -24,7 +24,6 @@ Please note that this only supports IPv4 currently.
 
     use Net::DHCP::Config::Utilities;
     use Net::DHCP::Config::Utilities::INI_loader;
-    use Net::DHCP::Config::Utilities::Generator::ISC_DHCPD;
     
     my $dhcp_util = Net::DHCP::Config::Utilities->new;
     
@@ -53,6 +52,9 @@ Please note that this only supports IPv4 currently.
         # do something upon error
         die( $@ );
     }
+
+    my @subnets=$dhcp_util->subnet_list;
+    print "Subnets:\n".join("\n", @subnets)."\n";
 
 =head1 METHODS
 

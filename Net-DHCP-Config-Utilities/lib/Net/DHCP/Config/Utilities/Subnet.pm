@@ -257,6 +257,10 @@ sub options_list{
 
 This sets an option.
 
+Two arguments are taken. The first is the option
+and the second is the value. If the value is left undefined,
+then the option is deleted.
+
     eval{
          $subnet->option_set( $option, $value );
     };

@@ -9,7 +9,7 @@ use String::ShellQuote;
 
 =head1 NAME
 
-Net::DHCP::Config::Utilities::Generator::ISC_DHCPD - Generators a config for ISC DHCPD from the supplied subnets.
+Net::DHCP::Config::Utilities::Generator::ISC_DHCPD - Generates a config for ISC DHCPD from the supplied subnets.
 
 =head1 VERSION
 
