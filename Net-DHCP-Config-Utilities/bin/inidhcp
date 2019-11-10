@@ -37,6 +37,7 @@ sub help{
 -w <URL>      The web proxy for the subnet.
 -l <time>     The lease time.
 -r <path>     Root path for netboot via NFS.
+-V <vars>     The variable section to pass to generator in the templates.
 
 ACTIONS
 add  Adds a new scope. Requires a minimum of -s and -m.
@@ -63,7 +64,8 @@ my $lease_time;
 my $root_path;
 my $desciption;
 my $help;
-my $version,
+my $version;
+my $vars_section;
 
 # get the commandline options
 Getopt::Long::Configure ('no_ignore_case');
@@ -90,6 +92,7 @@ GetOptions(
 		   'help'=>\$help,
 		   'v'=>\$version,
 		   'version'=>\$version,
+		   'V'=>\$vars_section
 		   );
 
 if ( $version ){
@@ -167,6 +170,20 @@ if ( $@ ){
 
 #handle generation
 if ( $action eq 'gen' ){
+	my $vars;
+	if ( !defined( $vars_section ) ){
+		if (!defined( $config->{vars} ) ){
+			$vars={};
+		}else{
+			$vars=$config->{vars};
+		}
+	}else{
+		if ( !defined( $config->{$vars_section} ) ){
+			die( '"'.$vars_section.'" does not exist as a section in "'.$config_file.'"' );
+		}
+		$vars=$config->{$vars_section};
+	}
+
 	# make sure this always exists, even if it is blank so we don't error upon init
 	if (!defined( $config->{vars} ) ){
 		$config->{vars}={};
@@ -178,7 +195,7 @@ if ( $action eq 'gen' ){
         $generator=Net::DHCP::Config::Utilities::Generator::ISC_DHCPD->new({
 																			'footer'=>$config->{generator}{footer},
 																			'header'=>$config->{generator}{header},
-																			'vars'=>$config->{vars},
+																			'vars'=>$vars,
 																			'output'=>$config->{generator}{output},
 																			});
 	};
@@ -302,7 +319,7 @@ inidhcp - Works with DHCP information stored in INI files.
 
 inidhcp B<-c> <config> B<-a> rm B<-s> <scope>
 
-inidhcp B<-c> <config> B<-a> gen
+inidhcp B<-c> <config> B<-a> gen [B<-V> <vars section>]
 
 inidhcp B<-c> <config> B<-a> add B<-s> <scope> B<-m> <mask> [B<-g> <gateways>]
 [B<-t> <TFTP server>] [B<-n> <NTP servers>] [B<-B> <broadcast>] [B<-M> <MTU>]
@@ -370,5 +387,9 @@ The lease time.
 =head2 -r <path>
 
 Root path for netboot via NFS.
+
+=head2 -V <vars section>
+
+The variable section to pass to generator for use in the templates.
 
 =cut
