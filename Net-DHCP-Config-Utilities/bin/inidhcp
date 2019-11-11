@@ -138,11 +138,14 @@ if ( $@ ){
 if (!defined( $config->{_}{dir} ) ){
 	die('"dir" not defined in the config');
 }elsif(!defined( $config->{generator}{footer} ) ){
-	die('"footer" not defined in the config in the config section "generator"');
+	$config->{generator}{footer}=$config->{_}{dir}.'/footer';
+	#die('"footer" not defined in the config in the config section "generator"');
 }elsif(!defined( $config->{generator}{header} ) ){
-	die('"header" not defined in the config in the config section "generator"');
+	$config->{generator}{header}=$config->{_}{dir}.'/header';
+	#die('"header" not defined in the config in the config section "generator"');
 }elsif(!defined( $config->{generator}{output} ) ){
-	die('"output" not defined in the config in the config section "generator"');
+	$config->{generator}{output}=$config->{_}{dir}.'/output';
+	#die('"output" not defined in the config in the config section "generator"');
 }elsif( ! -d $config->{_}{dir} ){
 	die('"'.$config->{_}{dir}.'" is not a directory or does not exist');
 }
@@ -391,5 +394,60 @@ Root path for netboot via NFS.
 =head2 -V <vars section>
 
 The variable section to pass to generator for use in the templates.
+
+=head1 CONFIGURATION
+
+Below is a example config in which inidhcp is ran out of the
+current directory.
+
+    dir=./
+    [generator]
+    header=header
+    footer=footer
+    output=output
+
+=head2 SECTIONS
+
+=head3 ROOT
+
+=head4 directory
+
+This is the directory that has the ini.dhcp files in it.
+
+=head3 generator
+
+=head4 header
+
+This is the header template to use. L<Template> is
+used for templating.
+
+=head4 footer
+
+This is the footer template to use. L<Template> is
+used for templating.
+
+=head4 output
+
+This is the file to output to.
+
+=head1 EXAMPLE TEMPLATES
+
+Header...
+
+    default-lease-time 600;
+    max-lease-time 7200;
+    
+    ddns-update-style none;
+    
+    authoritative;
+
+    option web-proxy code 252 = text;
+    
+    log-facility local7;
+
+Footer...
+
+    
+
 
 =cut
