@@ -218,6 +218,10 @@ L<https://cpanratings.perl.org/d/Net-DHCP-Config-Utilities>
 
 L<https://metacpan.org/release/Net-DHCP-Config-Utilities>
 
+=item * Git Repository
+
+L<https://github.com/VVelox/Net-DHCP-Config-Utilities>
+
 =back
 
 
