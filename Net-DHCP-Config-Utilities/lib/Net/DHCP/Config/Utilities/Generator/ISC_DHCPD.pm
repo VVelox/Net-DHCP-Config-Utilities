@@ -196,7 +196,13 @@ sub generate{
 	my @subnets=sort( $object->subnet_list );
 	foreach my $base ( @subnets ){
 		my $subnet=$object->subnet_get( $base );
-		$middle=$middle.'subnet '.$base.' netmask '.$subnet->mask_get." {\n";
+
+		my $desc=$subnet->desc_get;
+		if ( $desc ne '' ){
+			$desc='# '.$desc."\n";
+		}
+
+		$middle=$middle.$desc.'subnet '.$base.' netmask '.$subnet->mask_get." {\n";
 
 		# add any required ranges
 		# unless you have static IPs in the footer you really need ranges
