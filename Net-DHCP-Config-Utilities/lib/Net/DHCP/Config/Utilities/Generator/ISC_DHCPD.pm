@@ -13,11 +13,11 @@ Net::DHCP::Config::Utilities::Generator::ISC_DHCPD - Generates a config for ISC 
 
 =head1 VERSION
 
-Version 0.0.1
+Version 0.1.0
 
 =cut
 
-our $VERSION = '0.0.1';
+our $VERSION = '0.1.0';
 
 
 =head1 SYNOPSIS
