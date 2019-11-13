@@ -206,12 +206,12 @@ sub generate{
 
 		# add any required ranges
 		# unless you have static IPs in the footer you really need ranges
-		my @ranges=$subnet->range_get;
+		my @ranges=sort( $subnet->range_get );
 		foreach my $range ( @ranges ){
 			$middle=$middle.'    range '.$range.";\n";
 		}
 
-		my @options=$subnet->options_list;
+		my @options=sort( $subnet->options_list );
 		foreach my $option ( @options ){
 			my $value=$subnet->option_get( $option );
 			my $long=$self->{options}->get_long( $option );
