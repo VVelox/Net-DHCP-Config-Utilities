@@ -6,6 +6,7 @@ use warnings;
 use Config::Tiny;
 use File::Find::Rule;
 use Net::CIDR;
+use Net::CIDR::Overlap;
 #use Net::DHCP::Config::Utilities::Options;
 
 =head1 NAME
@@ -125,13 +126,17 @@ sub check {
 					# go through, checking each subnet
 					foreach my $current_subnet_other (@subnets_keys) {
 
+						# used for checking if there is overlap
+						my $nco = Net::CIDR::Overlap->new;
+						$nco->add($cidr);
+
 						# make sure we don't process the current subnet
 						# also make sure the other subnet has a mask
 						if (   ( $current_subnet_other ne $current_subnet )
 							&& ( defined( $loaded{$file}->{$current_subnet_other}->{mask} ) ) )
 						{
 							my $subnet_other = $current_subnet_other;
-							my $mask_other = $loaded{$file}->{$current_subnet_other}->{mask};
+							my $mask_other   = $loaded{$file}->{$current_subnet_other}->{mask};
 
 							# checks if there is a different subnet specified in the key
 							if ( defined( $loaded{$file}->{$current_subnet_other}->{subnet} ) ) {
@@ -141,11 +146,17 @@ sub check {
 							# create a CIDR for the other subnet and if it can be created, check it
 							my $cidr_other;
 							eval { $cidr_other = Net::CIDR::addrandmask2cidr( $subnet_other, $mask_other ); };
-							if (!$@) {
-								
+							if ( !$@ ) {
+								# if this dies, it means there is a conflict
+								eval { $nco->add($cidr_other); };
+								if ($@) {
+									push( @{ $subnet_data->{conflicts} }, $cidr_other . ' in ' . $file );
+								}
 							}
 						}
 					}
+
+					# We have 
 				}
 			}
 			else {
