@@ -40,9 +40,10 @@ sub help{
 -V <vars>     The variable section to pass to generator in the templates.
 
 ACTIONS
-add  Adds a new scope. Requires a minimum of -s and -m.
-rm   Removes a scope. Requires -s.
-gen  Generates the output
+add   Adds a new scope. Requires a minimum of -s and -m.
+rm    Removes a scope. Requires -s.
+gen   Generates the output
+check Goes through the dhcp.ini files for overlaps.
 ';
 }
 

@@ -25,7 +25,7 @@ my %WriteMakefileArgs = (
 									   'Net::CIDR::Set'=>'0.13',
 									   'File::Find::Rule'=>'0.34',
 									   'Template'=>'2.29',
-									   'String::Shellquote'=>'1.04',
+									   'String::ShellQuote'=>'1.04',
 									   },
 						 dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
 						 clean => { FILES => 'Net-DHCP-Config-Utilities-*' },
