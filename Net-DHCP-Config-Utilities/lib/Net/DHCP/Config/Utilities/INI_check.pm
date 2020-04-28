@@ -57,11 +57,11 @@ sub new {
 }
 
 
-=head2 check
+=head2 cidr_check
 
 =cut
 
-sub check {
+sub cidr_check {
 	my $self = $_[0];
 
 	# the files to find
@@ -94,81 +94,122 @@ sub check {
 
 	# go through and check each file
 	foreach my $file ( keys(%loaded) ) {
-		my @subnets_keys = keys( %{ $loaded{$file} } );
-
-		my $file_data = { subnets => {} };
-
-		# check each subnet in the file
-		foreach my $current_subnet (@subnets_keys) {
-			my $subnet = $current_subnet;
-
-			my $subnet_data = { conflicts => [], };
-
-			# checks if there is a different subnet specified in the key
-			if ( defined( $loaded{$file}->{$current_subnet}->{subnet} ) ) {
-				$subnet = $loaded{$file}->{$current_subnet}->{subnet};
-			}
-
-			# Only proceed if we have a mask
-			if ( defined( $loaded{$file}->{$current_subnet}->{mask} ) ) {
-				my $mask = $loaded{$file}->{$current_subnet}->{mask};
-
-				# convert the subnet address and mask to a CIDR
-				my $cidr;
-				eval { $cidr = Net::CIDR::addrandmask2cidr( $subnet, $mask ); };
-				if ($@) {
-
-					# If the above errored, then stop processing this subnet error
-					$subnet_data->{cidr}
-						= '"' . $subnet . '" with a mask for "' . $mask . '" can not be converted to a CIDR... ' . $@;
-				}
-				else {
-					# go through, checking each subnet
-					foreach my $current_subnet_other (@subnets_keys) {
-
-						# used for checking if there is overlap
-						my $nco = Net::CIDR::Overlap->new;
-						$nco->add($cidr);
-
-						# make sure we don't process the current subnet
-						# also make sure the other subnet has a mask
-						if (   ( $current_subnet_other ne $current_subnet )
-							&& ( defined( $loaded{$file}->{$current_subnet_other}->{mask} ) ) )
-						{
-							my $subnet_other = $current_subnet_other;
-							my $mask_other   = $loaded{$file}->{$current_subnet_other}->{mask};
-
-							# checks if there is a different subnet specified in the key
-							if ( defined( $loaded{$file}->{$current_subnet_other}->{subnet} ) ) {
-								$subnet_other = $loaded{$file}->{$current_subnet_other}->{subnet};
-							}
-
-							# create a CIDR for the other subnet and if it can be created, check it
-							my $cidr_other;
-							eval { $cidr_other = Net::CIDR::addrandmask2cidr( $subnet_other, $mask_other ); };
-							if ( !$@ ) {
-								# if this dies, it means there is a conflict
-								eval { $nco->add($cidr_other); };
-								if ($@) {
-									push( @{ $subnet_data->{conflicts} }, $cidr_other . ' in ' . $file );
-								}
-							}
-						}
-					}
-
-					# We have 
-				}
-			}
-			else {
-				$subnet_data->{'mask'} = 'None specified';
-			}
-
-			$file_data->{$current_subnet} = $subnet_data;
-		}
-
-		$to_return->{$file} = $file_data;
+		
 	}
 
+}
+
+=head2 cidr_in_file
+
+This goes through the INI file and checks the subnets there for any
+overlap with the specified CIDR.
+
+Two arguments are required. The first is the CIDR to check for and the
+second is the INI DHCP file to check for overlaps in.
+
+Any subnets with bad base/mask that don't convert properly to a CIDR
+are skipped.
+
+The returned value is a array reference of any found conflicts.
+
+    my $overlaps=$ini_check->cidr_in_file( $cidr, $file );
+    if ( defined( $overlaps->[0] ) ){
+        print "Overlap(s) found\n";
+    }
+
+=cut
+
+sub cidr_in_file {
+	my $self = $_[0];
+	my $cidr = $_[1];
+	my $file = $_[2];
+	my $ignore = $_[3];
+
+	# make sure they are both defined before going any further
+	if (   ( !defined($cidr) )
+		|| ( !defined($file) ) )
+	{
+		die 'Either CIDR or file undefined';
+	}
+
+	# make sure the CIDR has a /, the next test will pass regardless
+	if ( $cidr !~ /\// ) {
+		die 'The value passed for the CIDR does not contain a /';
+	}
+
+	# make sure the CIDR is valid
+	my $cidr_test;
+	eval { $cidr_test = Net::CIDR::cidrvalidate($cidr); };
+	if ( $@ || ( !defined($cidr_test) ) ) {
+		die '"' . $cidr . '" is not a valid CIDR';
+	}
+
+	# make sure we can read the INI file
+	my $ini;
+	eval { $ini = Config::Tiny->new($file); };
+	if ( $@ || ( !defined($ini) ) ) {
+		my $extra_dead='';
+		if ($@) {
+			$extra_dead='... '.$@;
+		}
+		die 'Failed to load the INI file';
+	}
+
+	# build a list of the sections with masks
+	my @ini_keys_found = keys( %{$ini} );
+	my %subnets;
+	foreach my $current_key (@ini_keys_found) {
+		my $ref_test = $ini->{$current_key};
+
+		# if it is a hash and has a subnet mask, add it to the list
+		if ( ( ref($ref_test) eq 'HASH' )
+			&& defined( $ini->{$current_key}{mask} ) )
+		{
+			$subnets{$current_key} = 1;
+		}
+	}
+
+	# Config::Tiny uses _ for variables not in a section
+	# This really should never be true as there is no reason for this section
+	# to contain the mask variable.
+	if ( defined( $subnets{_} ) ) {
+		delete( $subnets{_} );
+	}
+
+	# If a ignore is specified, remove it, if it is defined
+	if (   defined($ignore)
+		&& defined( $subnets{$ignore} ) )
+	{
+		delete( $subnets{$ignore} );
+	}
+
+
+	# holds the overlaps
+	my @overlaps;
+
+	# go through and test each CIDR
+	foreach my $subnet_current ( keys(%subnets) ) {
+		my $subnet = $subnet_current;
+		my $mask   = $ini->{$subnet_current}{mask};
+
+		if ( defined( $ini->{$subnet_current}{base} ) ) {
+			$subnet = $ini->{$subnet_current}{base};
+		}
+
+		my $cidr_other;
+		eval { $cidr_other = Net::CIDR::addrandmask2cidr( $subnet, $mask ); };
+		if ( !$@ ) {
+			my $nco = Net::CIDR::Overlap->new;
+			$nco->add($cidr);
+
+			eval { $nco->add($cidr_other); };
+			if ($@) {
+				push( @overlaps, $subnet_current );
+			}
+		}
+	}
+
+	return \@overlaps;
 }
 
 =head1 AUTHOR
