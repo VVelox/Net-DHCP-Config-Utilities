@@ -57,20 +57,35 @@ sub new {
 }
 
 
-=head2 cidr_check
+=head2 overlap_check
+
+Finds every DHCP INI file in the directory file in the directory and
+checks for overlaps.
+
+    $returned{$file}{$subnet}{$file_containing_conflicts}[$sections]
+
+The returned values is a hash. $file is the name of file containing the checked
+subnet. $subnet is the name of subnet in conflict. $file_containing_conflicts them
+the name of the file containing the conflict. $sections is the name of the INI
+sections in the previously mentioned file containing the conflict.
+
+    my %overlaps;
+    eval { %overlaps = $ini_checker->overlap_check; };
+    if ($@){
+        warn('Overlap check failed... ');
+    }else{
+        use Data::Dumper;
+        $Data::Dumper::Terse=1;
+        print Dumper( \%overlaps );
+    }
 
 =cut
 
-sub cidr_check {
+sub overlap_check {
 	my $self = $_[0];
 
 	# the files to find
-	my @files = File::Find::Rule->file()
-	->name( $self->{name} )
-	->in( $self->{dir} );
-
-	# the data to return
-	my $to_return = {};
+	my @files = File::Find::Rule->file()->name( $self->{name} )->in( $self->{dir} );
 
 	# make ainitial pass through, loading them all
 	my %loaded;
@@ -79,24 +94,86 @@ sub cidr_check {
 		eval { $ini = Config::Tiny->new($file); };
 		if ( $@ || ( !defined($ini) ) ) {
 
-			# put the error description together
-			my $error;
+			# die if we can't load any of them
 			if ( !defiend($ini) ) {
-				$error = 'Did not die but returned undef.';
+				die 'Did not die but returned undef for "'.$file.'"';
 			}
 			else {
-				$error = $@;
+				die 'Died parsing "'.$file.'"... '.$@;
 			}
-			$to_return->{$file} = { 'load' => 'failed to load... ' . $error };
 		}
 		$loaded{$file} = $ini;
 	}
 
+	my %to_return;
+
 	# go through and check each file
 	foreach my $file ( keys(%loaded) ) {
-		
+		my @ini_keys_found = keys( %{ $loaded{$file} } );
+		my %subnets;
+		foreach my $current_key (@ini_keys_found) {
+			my $ref_test = $loaded{$file}->{$current_key};
+
+			# if it is a hash and has a subnet mask, add it to the list
+			if ( ( ref($ref_test) eq 'HASH' )
+				&& defined( $loaded{$file}->{$current_key}{mask} ) )
+			{
+				$subnets{$current_key} = 1;
+			}
+		}
+
+		# Config::Tiny uses _ for variables not in a section
+		# This really should never be true as there is no reason for this section
+		# to contain the mask variable.
+		if ( defined( $subnets{_} ) ) {
+			delete( $subnets{_} );
+		}
+
+		# check each subnet in the current file
+		foreach my $current_subnet ( keys(%subnets) ) {
+			my $subnet = $current_subnet;
+			my $mask   = $loaded{$file}->{$current_subnet}{mask};
+
+			# if we have a base specified, use it instead of the section name
+			if ( defined( $loaded{$file}->{$current_subnet}{base} ) ) {
+				$subnet = $loaded{$file}->{$current_subnet}{base};
+			}
+
+			# try to generate a CIDR
+			my $cidr;
+			eval { $cidr = Net::CIDR::addrandmask2cidr( $subnet, $mask ); };
+
+			# only process this subnet if we can generate a CIDR
+			if ( !$@ && defined($cidr) ) {
+
+				# go through and test the current subnet against each file
+				foreach my $in_file ( keys(%loaded) ) {
+
+					# only ignore this subnet if it is found
+					my $ignore;
+					if ( $in_file eq $file ) {
+						$ignore = $current_subnet;
+					}
+
+					# look for overlaps
+					my @overlaps = $self->cidr_in_file( $in_file, $cidr, $ignore );
+
+					# handle the overlaps if found, adding it to the return data
+					if ( defined( $overlaps[0] ) ) {
+						if ( !defiend( $to_return{$file} ) ) {
+							$to_return{$file} = {};
+						}
+						if ( !defiend( $to_return{$file}{$current_subnet} ) ) {
+							$to_return{$file}{$current_subnet} = {};
+						}
+						$to_return{$file}{$current_subnet}{$in_file} = \@overlaps;
+					}
+				}
+			}
+		}
 	}
 
+	return %to_return;
 }
 
 =head2 cidr_in_file
