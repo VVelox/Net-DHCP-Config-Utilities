@@ -158,14 +158,14 @@ sub overlap_check {
 					}
 
 					# look for overlaps
-					my @overlaps = $self->cidr_in_file( $in_file, $cidr, $ignore );
+					my @overlaps = $self->cidr_in_file( $cidr, $in_file, $ignore );
 
 					# handle the overlaps if found, adding it to the return data
 					if ( defined( $overlaps[0] ) ) {
-						if ( !defiend( $to_return{$file} ) ) {
+						if ( !defined( $to_return{$file} ) ) {
 							$to_return{$file} = {};
 						}
-						if ( !defiend( $to_return{$file}{$current_subnet} ) ) {
+						if ( !defined( $to_return{$file}{$current_subnet} ) ) {
 							$to_return{$file}{$current_subnet} = {};
 						}
 						$to_return{$file}{$current_subnet}{$in_file} = \@overlaps;
@@ -231,7 +231,7 @@ sub cidr_in_file {
 		if ($@) {
 			$extra_dead='... '.$@;
 		}else{
-			$extra_ead='... '.$ini->errstr;
+			$extra_dead='... '.$ini->errstr;
 		}
 		die 'Failed to load the INI file';
 	}
