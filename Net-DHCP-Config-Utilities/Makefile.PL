@@ -26,6 +26,7 @@ my %WriteMakefileArgs = (
 									   'File::Find::Rule'=>'0.34',
 									   'Template'=>'2.29',
 									   'String::ShellQuote'=>'1.04',
+									   'Data::Dumper' => '0',
 									   },
 						 dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
 						 clean => { FILES => 'Net-DHCP-Config-Utilities-*' },

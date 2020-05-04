@@ -11,7 +11,7 @@ use Net::CIDR::Set;
 
 =head1 NAME
 
-Net::DHCP::Config::Utilities::INI_check - Loads subnet configurations from a INI file and checks it for overlaps.
+Net::DHCP::Config::Utilities::INI_check - Runs various checks for DHCP info stored via INI.
 
 =head1 VERSION
 
@@ -23,12 +23,41 @@ our $VERSION = '0.0.1';
 
 =head1 SYNOPSIS
 
+    use Net::DHCP::Config::Utilities::Options
+    use Data::Dumper;
+
+    my $ini_checker;
+    eval { $ini_checker=Net::DHCP::Config::Utilities::INI_check->new( $dir )) };
+    if ( $@ ){
+        die "Initing the checker failed with... ".$@;
+    }
+
+    my %overlaps;
+    eval { %overlaps = $ini_checker->overlap_check; };
+    if ($@){
+        warn('Overlap check failed... ');
+    }else{
+        use Data::Dumper;
+        $Data::Dumper::Terse=1;
+        print Dumper( \%overlaps );
+    }
 
 =head1 METHODS
 
 =head2 new
 
 This initiates the object.
+
+One arguments is required and that is the directory to process.
+
+The section optional argument is the glob to use to match the files to process.
+If left undefined, "*.dhcp.ini" is used.
+
+    my $checker;
+    eval { $checker=Net::DHCP::Config::Utilities::INI_check->new( $dir )) };
+    if ( $@ ){
+        die "Initing the checker failed with... ".$@;
+    }
 
 =cut
 
@@ -56,13 +85,12 @@ sub new {
 	return $self;
 }
 
-
 =head2 overlap_check
 
 Finds every DHCP INI file in the directory file in the directory and
 checks for overlaps.
 
-    $returned{$file}{$subnet}{$file_containing_conflicts}[$sections]
+    $returned{$file}{$section}{$file_containing_conflicts}[$sections]
 
 The returned values is a hash. $file is the name of file containing the checked
 subnet. $subnet is the name of subnet in conflict. $file_containing_conflicts them
@@ -91,16 +119,18 @@ sub overlap_check {
 	my %loaded;
 	foreach my $file (@files) {
 		my $ini;
+
 		#$ini = Config::Tiny->new;
 		#my $parsed_it;
-		eval { $ini=Config::Tiny->read($file) };
+		eval { $ini = Config::Tiny->read($file) };
 		if ( $@ || $! ) {
+
 			# die if we can't load any of them
-			if ( $@ ) {
-				die 'Died parsing "'.$file.'"... '.$@;
+			if ($@) {
+				die 'Died parsing "' . $file . '"... ' . $@;
 			}
 			else {
-				die 'Error parsing "'.$file.'"... '.$ini->errstr;
+				die 'Error parsing "' . $file . '"... ' . $ini->errstr;
 
 			}
 		}
@@ -200,9 +230,9 @@ The returned value is a array reference of any found conflicts.
 =cut
 
 sub cidr_in_file {
-	my $self = $_[0];
-	my $cidr = $_[1];
-	my $file = $_[2];
+	my $self   = $_[0];
+	my $cidr   = $_[1];
+	my $file   = $_[2];
 	my $ignore = $_[3];
 
 	# make sure they are both defined before going any further
@@ -228,11 +258,12 @@ sub cidr_in_file {
 	my $ini;
 	eval { $ini = Config::Tiny->read($file); };
 	if ( $@ || $! ) {
-		my $extra_dead='';
+		my $extra_dead = '';
 		if ($@) {
-			$extra_dead='... '.$@;
-		}else{
-			$extra_dead='... '.$ini->errstr;
+			$extra_dead = '... ' . $@;
+		}
+		else {
+			$extra_dead = '... ' . $ini->errstr;
 		}
 		die 'Failed to load the INI file';
 	}
@@ -265,7 +296,6 @@ sub cidr_in_file {
 		delete( $subnets{$ignore} );
 	}
 
-
 	# holds the overlaps
 	my @overlaps;
 
@@ -282,9 +312,9 @@ sub cidr_in_file {
 		eval { $cidr_other = Net::CIDR::addrandmask2cidr( $subnet, $mask ); };
 		if ( !$@ ) {
 
-			my $set=Net::CIDR::Set->new( $cidr );
+			my $set = Net::CIDR::Set->new($cidr);
 
-			if ( $set->contains_any( $cidr_other ) ) {
+			if ( $set->contains_any($cidr_other) ) {
 				push( @overlaps, $subnet_current );
 			}
 		}
