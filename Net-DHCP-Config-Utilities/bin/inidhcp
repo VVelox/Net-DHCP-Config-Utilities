@@ -321,7 +321,7 @@ if ( $action eq 'add' ){
 if ( $action eq 'check' ){
 	my $checker=Net::DHCP::Config::Utilities::INI_check->new( $config->{_}{dir} );
 
-	my %overlaps=$checker->overlap_checks;
+	my %overlaps=$checker->overlap_check;
 	$Data::Dumper::Terse = 1;
 	print Dumper( %overlaps );
 }
