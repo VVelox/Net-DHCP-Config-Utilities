@@ -6,7 +6,7 @@ use warnings;
 use Config::Tiny;
 use File::Find::Rule;
 use Net::CIDR;
-use Net::CIDR::Overlap;
+use Net::CIDR::Set;
 #use Net::DHCP::Config::Utilities::Options;
 
 =head1 NAME
@@ -281,11 +281,10 @@ sub cidr_in_file {
 		my $cidr_other;
 		eval { $cidr_other = Net::CIDR::addrandmask2cidr( $subnet, $mask ); };
 		if ( !$@ ) {
-			my $nco = Net::CIDR::Overlap->new;
-			$nco->add($cidr);
 
-			eval { $nco->add($cidr_other); };
-			if ($@) {
+			my $set=Net::CIDR::Set->new( $cidr );
+
+			if ( $set->contains_any( $cidr_other ) ) {
 				push( @overlaps, $subnet_current );
 			}
 		}

@@ -321,9 +321,20 @@ if ( $action eq 'add' ){
 if ( $action eq 'check' ){
 	my $checker=Net::DHCP::Config::Utilities::INI_check->new( $config->{_}{dir} );
 
+	my $bad=0;
+
 	my %overlaps=$checker->overlap_check;
-	$Data::Dumper::Terse = 1;
-	print Dumper( %overlaps );
+
+	my @overlaps_keys=keys( %overlaps );
+	if ( defined( $overlaps_keys[0] ) ){
+		$Data::Dumper::Terse = 1;
+		print "Overlapping Sections found...\n".
+		"File => Section => File With Overlap => Overlapping Section\n".
+		Dumper( \%overlaps );
+		$bad=1;
+	}
+
+	exit $bad;
 }
 
 =head1 NAME
