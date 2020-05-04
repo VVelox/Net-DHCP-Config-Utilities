@@ -91,15 +91,17 @@ sub overlap_check {
 	my %loaded;
 	foreach my $file (@files) {
 		my $ini;
-		eval { $ini = Config::Tiny->new($file); };
-		if ( $@ || ( !defined($ini) ) ) {
-
+		#$ini = Config::Tiny->new;
+		#my $parsed_it;
+		eval { $ini=Config::Tiny->read($file) };
+		if ( $@ || $! ) {
 			# die if we can't load any of them
-			if ( !defiend($ini) ) {
-				die 'Did not die but returned undef for "'.$file.'"';
+			if ( $@ ) {
+				die 'Died parsing "'.$file.'"... '.$@;
 			}
 			else {
-				die 'Died parsing "'.$file.'"... '.$@;
+				die 'Error parsing "'.$file.'"... '.$ini->errstr;
+
 			}
 		}
 		$loaded{$file} = $ini;
