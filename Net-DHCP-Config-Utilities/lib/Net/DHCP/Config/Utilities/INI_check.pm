@@ -225,11 +225,13 @@ sub cidr_in_file {
 
 	# make sure we can read the INI file
 	my $ini;
-	eval { $ini = Config::Tiny->new($file); };
-	if ( $@ || ( !defined($ini) ) ) {
+	eval { $ini = Config::Tiny->read($file); };
+	if ( $@ || $! ) {
 		my $extra_dead='';
 		if ($@) {
 			$extra_dead='... '.$@;
+		}else{
+			$extra_ead='... '.$ini->errstr;
 		}
 		die 'Failed to load the INI file';
 	}
