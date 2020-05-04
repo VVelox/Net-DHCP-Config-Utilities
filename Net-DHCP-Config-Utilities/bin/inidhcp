@@ -13,8 +13,10 @@ use Config::Tiny;
 use Net::DHCP::Config::Utilities;
 use Net::DHCP::Config::Utilities::Subnet;
 use Net::DHCP::Config::Utilities::INI_loader;
+use Net::DHCP::Config::Utilities::INI_check;
 use Net::DHCP::Config::Utilities::Generator::ISC_DHCPD;
 use Net::CIDR;
+use Data::Dumper;
 
 sub version{
 	print "inidhcp v. 0.0.1\n";
@@ -315,6 +317,15 @@ if ( $action eq 'add' ){
 	exit;
 }
 
+# the check funtion
+if ( $action eq 'check' ){
+	my $checker=Net::DHCP::Config::Utilities::INI_check->new( $config->{_}{dir} );
+
+	my %overlaps=$checker->overlap_checks;
+	$Data::Dumper::Terse = 1;
+	print Dumper( %overlaps );
+}
+
 =head1 NAME
 
 inidhcp - Works with DHCP information stored in INI files.
@@ -330,13 +341,48 @@ inidhcp B<-c> <config> B<-a> add B<-s> <scope> B<-m> <mask> [B<-g> <gateways>]
 [B<-d> <DNS servers>]  [B<-w> <URL>] [B<-l> <time>] [B<-b> <bootfile>]
 [B<-R> <IP IP>]
 
+inidhcp B<-c> <config> B<-a> check
+
+=head1 ACTIONS
+
+These are specified via the -a flag.
+
+=head2 rm
+
+This removes the scope specified via B<-s> <scope>.
+
+=head2 gen
+
+This generates the ISC DHCPD config.
+
+You can specify the vars sections in the INI file to use via them
+the B<-V> flag.
+
+=head2 add
+
+This adds a new subnet. The minimum required values are
+B<-m> <mask> and B<-s> <scope>.
+
+The following are additional flags that can be used with this.
+
+    B<-g> <gateways>
+    B<-t> <TFTP server>
+    B<-n> <NTP servers>
+    B<-B> <broadcast>
+    B<-M> <MTU>
+    B<-d> <DNS servers>
+    B<-w> <URL>
+    B<-l> <time>
+    B<-b> <bootfile>
+    B<-R> <IP IP>
+
 =head1 FLAGS
 
 =head2 -a <action>
 
 The action to perform.
 
-=head2 -c <config>
+xs=head2 -c <config>
 
 The config file to use.
 

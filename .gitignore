@@ -34,6 +34,16 @@ inc/
 /pm_to_blib
 /*.zip
 
+#emacs
+*/#*#
+*/*/#*#
+*/*/*/#*#
+*/*/*/*/#*#
+*/*/*/*/*/#*#
+*/*/*/*/*/*/#*#
+*/*/*/*/*/*/*/#*#
+
+
 # test stuff
 Net-DHCP-Config-Utilities/t/iscdhcpd/output
 Net-DHCP-Config-Utilities/bin/.exists
