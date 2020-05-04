@@ -162,6 +162,7 @@ sub overlap_check {
 
 					# handle the overlaps if found, adding it to the return data
 					if ( defined( $overlaps[0] ) ) {
+
 						if ( !defined( $to_return{$file} ) ) {
 							$to_return{$file} = {};
 						}
@@ -290,7 +291,7 @@ sub cidr_in_file {
 		}
 	}
 
-	return \@overlaps;
+	return @overlaps;
 }
 
 =head1 AUTHOR
